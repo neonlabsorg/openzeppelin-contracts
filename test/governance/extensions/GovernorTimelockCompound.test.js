@@ -20,7 +20,7 @@ function makeContractAddress (creator, nonce) {
   return web3.utils.toChecksumAddress(web3.utils.sha3(RLP.encode([creator, nonce])).slice(12).substring(14));
 }
 
-contract('GovernorTimelockCompound', function (accounts) {
+contract.skip('GovernorTimelockCompound', function (accounts) {
   const [ admin, voter ] = accounts;
 
   const name = 'OZ-Governor';

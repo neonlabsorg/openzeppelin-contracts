@@ -9,7 +9,7 @@ const Token = artifacts.require('ERC20VotesCompMock');
 const Governor = artifacts.require('GovernorCompMock');
 const CallReceiver = artifacts.require('CallReceiverMock');
 
-contract('GovernorComp', function (accounts) {
+contract.skip('GovernorComp', function (accounts) {
   const [ owner, voter1, voter2, voter3, voter4 ] = accounts;
 
   const name = 'OZ-Governor';

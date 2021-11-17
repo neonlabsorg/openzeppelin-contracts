@@ -33,7 +33,7 @@ function makeContractAddress (creator, nonce) {
   return web3.utils.toChecksumAddress(web3.utils.sha3(RLP.encode([creator, nonce])).slice(12).substring(14));
 }
 
-contract('GovernorCompatibilityBravo', function (accounts) {
+contract.skip('GovernorCompatibilityBravo', function (accounts) {
   const [ owner, proposer, voter1, voter2, voter3, voter4, other ] = accounts;
 
   const name = 'OZ-Governor';

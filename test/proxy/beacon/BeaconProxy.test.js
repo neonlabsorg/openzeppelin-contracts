@@ -18,7 +18,7 @@ function toChecksumAddress (address) {
 const BEACON_LABEL = 'eip1967.proxy.beacon';
 const BEACON_SLOT = '0x' + new BN(keccak256(Buffer.from(BEACON_LABEL))).subn(1).toString(16);
 
-contract('BeaconProxy', function (accounts) {
+contract.skip('BeaconProxy', function (accounts) {
   const [anotherAccount] = accounts;
 
   describe('bad beacon is not accepted', async function () {

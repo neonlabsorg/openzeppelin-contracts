@@ -15,7 +15,7 @@ const Timelock = artifacts.require('TimelockController');
 const Governor = artifacts.require('GovernorTimelockControlMock');
 const CallReceiver = artifacts.require('CallReceiverMock');
 
-contract('GovernorTimelockControl', function (accounts) {
+contract.skip('GovernorTimelockControl', function (accounts) {
   const [ voter ] = accounts;
 
   const name = 'OZ-Governor';
