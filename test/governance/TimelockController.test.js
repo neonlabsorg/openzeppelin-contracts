@@ -42,7 +42,7 @@ function genOperationBatch (targets, values, datas, predecessor, salt) {
   return { id, targets, values, datas, predecessor, salt };
 }
 
-contract.skip('TimelockController', function (accounts) {
+contract('TimelockController', function (accounts) {
   const [ admin, proposer, executor, other ] = accounts;
 
   beforeEach(async function () {
@@ -61,13 +61,13 @@ contract.skip('TimelockController', function (accounts) {
     this.implementation2 = await Implementation2.new({ from: admin });
   });
 
-  it('initial state', async function () {
+  it.skip('initial state', async function () {
     expect(await this.timelock.getMinDelay()).to.be.bignumber.equal(MINDELAY);
   });
 
   describe('methods', function () {
     describe('operation hashing', function () {
-      it('hashOperation', async function () {
+      it.skip('hashOperation', async function () {
         this.operation = genOperation(
           '0x29cebefe301c6ce1bb36b58654fea275e1cacc83',
           '0xf94fdd6e21da21d2',
@@ -84,7 +84,7 @@ contract.skip('TimelockController', function (accounts) {
         )).to.be.equal(this.operation.id);
       });
 
-      it('hashOperationBatch', async function () {
+      it.skip('hashOperationBatch', async function () {
         this.operation = genOperationBatch(
           Array(8).fill('0x2d5f21620e56531c1d59c2df9b8e95d129571f71'),
           Array(8).fill('0x2b993cfce932ccee'),
@@ -113,7 +113,7 @@ contract.skip('TimelockController', function (accounts) {
           );
         });
 
-        it('proposer can schedule', async function () {
+        it.skip('proposer can schedule', async function () {
           const receipt = await this.timelock.schedule(
             this.operation.target,
             this.operation.value,
@@ -139,7 +139,7 @@ contract.skip('TimelockController', function (accounts) {
             .to.be.bignumber.equal(web3.utils.toBN(block.timestamp).add(MINDELAY));
         });
 
-        it('prevent overwritting active operation', async function () {
+        it.skip('prevent overwritting active operation', async function () {
           await this.timelock.schedule(
             this.operation.target,
             this.operation.value,
@@ -164,7 +164,7 @@ contract.skip('TimelockController', function (accounts) {
           );
         });
 
-        it('prevent non-proposer from commiting', async function () {
+        it.skip('prevent non-proposer from commiting', async function () {
           await expectRevert(
             this.timelock.schedule(
               this.operation.target,
@@ -179,7 +179,7 @@ contract.skip('TimelockController', function (accounts) {
           );
         });
 
-        it('enforce minimum delay', async function () {
+        it.skip('enforce minimum delay', async function () {
           await expectRevert(
             this.timelock.schedule(
               this.operation.target,
@@ -206,7 +206,7 @@ contract.skip('TimelockController', function (accounts) {
           );
         });
 
-        it('revert if operation is not scheduled', async function () {
+        it.skip('revert if operation is not scheduled', async function () {
           await expectRevert(
             this.timelock.execute(
               this.operation.target,
@@ -233,7 +233,7 @@ contract.skip('TimelockController', function (accounts) {
             ));
           });
 
-          it('revert if execution comes too early 1/2', async function () {
+          it.skip('revert if execution comes too early 1/2', async function () {
             await expectRevert(
               this.timelock.execute(
                 this.operation.target,
@@ -247,7 +247,7 @@ contract.skip('TimelockController', function (accounts) {
             );
           });
 
-          it('revert if execution comes too early 2/2', async function () {
+          it.skip('revert if execution comes too early 2/2', async function () {
             const timestamp = await this.timelock.getTimestamp(this.operation.id);
             await time.increaseTo(timestamp - 5); // -1 is too tight, test sometime fails
 
@@ -270,7 +270,7 @@ contract.skip('TimelockController', function (accounts) {
               await time.increaseTo(timestamp);
             });
 
-            it('executor can reveal', async function () {
+            it.skip('executor can reveal', async function () {
               const receipt = await this.timelock.execute(
                 this.operation.target,
                 this.operation.value,
@@ -288,7 +288,7 @@ contract.skip('TimelockController', function (accounts) {
               });
             });
 
-            it('prevent non-executor from revealing', async function () {
+            it.skip('prevent non-executor from revealing', async function () {
               await expectRevert(
                 this.timelock.execute(
                   this.operation.target,
@@ -318,7 +318,7 @@ contract.skip('TimelockController', function (accounts) {
           );
         });
 
-        it('proposer can schedule', async function () {
+        it.skip('proposer can schedule', async function () {
           const receipt = await this.timelock.scheduleBatch(
             this.operation.targets,
             this.operation.values,
@@ -346,7 +346,7 @@ contract.skip('TimelockController', function (accounts) {
             .to.be.bignumber.equal(web3.utils.toBN(block.timestamp).add(MINDELAY));
         });
 
-        it('prevent overwritting active operation', async function () {
+        it.skip('prevent overwritting active operation', async function () {
           await this.timelock.scheduleBatch(
             this.operation.targets,
             this.operation.values,
@@ -371,7 +371,7 @@ contract.skip('TimelockController', function (accounts) {
           );
         });
 
-        it('length of batch parameter must match #1', async function () {
+        it.skip('length of batch parameter must match #1', async function () {
           await expectRevert(
             this.timelock.scheduleBatch(
               this.operation.targets,
@@ -386,7 +386,7 @@ contract.skip('TimelockController', function (accounts) {
           );
         });
 
-        it('length of batch parameter must match #1', async function () {
+        it.skip('length of batch parameter must match #1', async function () {
           await expectRevert(
             this.timelock.scheduleBatch(
               this.operation.targets,
@@ -401,7 +401,7 @@ contract.skip('TimelockController', function (accounts) {
           );
         });
 
-        it('prevent non-proposer from commiting', async function () {
+        it.skip('prevent non-proposer from commiting', async function () {
           await expectRevert(
             this.timelock.scheduleBatch(
               this.operation.targets,
@@ -416,7 +416,7 @@ contract.skip('TimelockController', function (accounts) {
           );
         });
 
-        it('enforce minimum delay', async function () {
+        it.skip('enforce minimum delay', async function () {
           await expectRevert(
             this.timelock.scheduleBatch(
               this.operation.targets,
@@ -443,7 +443,7 @@ contract.skip('TimelockController', function (accounts) {
           );
         });
 
-        it('revert if operation is not scheduled', async function () {
+        it.skip('revert if operation is not scheduled', async function () {
           await expectRevert(
             this.timelock.executeBatch(
               this.operation.targets,
@@ -470,7 +470,7 @@ contract.skip('TimelockController', function (accounts) {
             ));
           });
 
-          it('revert if execution comes too early 1/2', async function () {
+          it.skip('revert if execution comes too early 1/2', async function () {
             await expectRevert(
               this.timelock.executeBatch(
                 this.operation.targets,
@@ -484,7 +484,7 @@ contract.skip('TimelockController', function (accounts) {
             );
           });
 
-          it('revert if execution comes too early 2/2', async function () {
+          it.skip('revert if execution comes too early 2/2', async function () {
             const timestamp = await this.timelock.getTimestamp(this.operation.id);
             await time.increaseTo(timestamp - 5); // -1 is to tight, test sometime fails
 
@@ -507,7 +507,7 @@ contract.skip('TimelockController', function (accounts) {
               await time.increaseTo(timestamp);
             });
 
-            it('executor can reveal', async function () {
+            it.skip('executor can reveal', async function () {
               const receipt = await this.timelock.executeBatch(
                 this.operation.targets,
                 this.operation.values,
@@ -527,7 +527,7 @@ contract.skip('TimelockController', function (accounts) {
               }
             });
 
-            it('prevent non-executor from revealing', async function () {
+            it.skip('prevent non-executor from revealing', async function () {
               await expectRevert(
                 this.timelock.executeBatch(
                   this.operation.targets,
@@ -541,7 +541,7 @@ contract.skip('TimelockController', function (accounts) {
               );
             });
 
-            it('length mismatch #1', async function () {
+            it.skip('length mismatch #1', async function () {
               await expectRevert(
                 this.timelock.executeBatch(
                   [],
@@ -555,7 +555,7 @@ contract.skip('TimelockController', function (accounts) {
               );
             });
 
-            it('length mismatch #2', async function () {
+            it.skip('length mismatch #2', async function () {
               await expectRevert(
                 this.timelock.executeBatch(
                   this.operation.targets,
@@ -569,7 +569,7 @@ contract.skip('TimelockController', function (accounts) {
               );
             });
 
-            it('length mismatch #3', async function () {
+            it.skip('length mismatch #3', async function () {
               await expectRevert(
                 this.timelock.executeBatch(
                   this.operation.targets,
@@ -585,7 +585,7 @@ contract.skip('TimelockController', function (accounts) {
           });
         });
 
-        it('partial execution', async function () {
+        it.skip('partial execution', async function () {
           const operation = genOperationBatch(
             [
               this.callreceivermock.address,
@@ -651,19 +651,19 @@ contract.skip('TimelockController', function (accounts) {
         ));
       });
 
-      it('proposer can cancel', async function () {
+      it.skip('proposer can cancel', async function () {
         const receipt = await this.timelock.cancel(this.operation.id, { from: proposer });
         expectEvent(receipt, 'Cancelled', { id: this.operation.id });
       });
 
-      it('cannot cancel invalid operation', async function () {
+      it.skip('cannot cancel invalid operation', async function () {
         await expectRevert(
           this.timelock.cancel(constants.ZERO_BYTES32, { from: proposer }),
           'TimelockController: operation cannot be cancelled',
         );
       });
 
-      it('prevent non-proposer from canceling', async function () {
+      it.skip('prevent non-proposer from canceling', async function () {
         await expectRevert(
           this.timelock.cancel(this.operation.id, { from: other }),
           `AccessControl: account ${other.toLowerCase()} is missing role ${this.PROPOSER_ROLE}`,
@@ -673,14 +673,14 @@ contract.skip('TimelockController', function (accounts) {
   });
 
   describe('maintenance', function () {
-    it('prevent unauthorized maintenance', async function () {
+    it.skip('prevent unauthorized maintenance', async function () {
       await expectRevert(
         this.timelock.updateDelay(0, { from: other }),
         'TimelockController: caller must be timelock',
       );
     });
 
-    it('timelock scheduled maintenance', async function () {
+    it.skip('timelock scheduled maintenance', async function () {
       const newDelay = time.duration.hours(6);
       const operation = genOperation(
         this.timelock.address,
@@ -751,7 +751,7 @@ contract.skip('TimelockController', function (accounts) {
       await time.increase(MINDELAY);
     });
 
-    it('cannot execute before dependency', async function () {
+    it.skip('cannot execute before dependency', async function () {
       await expectRevert(
         this.timelock.execute(
           this.operation2.target,
@@ -765,7 +765,7 @@ contract.skip('TimelockController', function (accounts) {
       );
     });
 
-    it('can execute after dependency', async function () {
+    it.skip('can execute after dependency', async function () {
       await this.timelock.execute(
         this.operation1.target,
         this.operation1.value,
@@ -788,7 +788,7 @@ contract.skip('TimelockController', function (accounts) {
   describe('usage scenario', function () {
     this.timeout(10000);
 
-    it('call', async function () {
+    it.skip('call', async function () {
       const operation = genOperation(
         this.implementation2.address,
         0,
@@ -819,7 +819,7 @@ contract.skip('TimelockController', function (accounts) {
       expect(await this.implementation2.getValue()).to.be.bignumber.equal(web3.utils.toBN(42));
     });
 
-    it('call reverting', async function () {
+    it.skip('call reverting', async function () {
       const operation = genOperation(
         this.callreceivermock.address,
         0,
@@ -851,7 +851,7 @@ contract.skip('TimelockController', function (accounts) {
       );
     });
 
-    it('call throw', async function () {
+    it.skip('call throw', async function () {
       const operation = genOperation(
         this.callreceivermock.address,
         0,
@@ -883,7 +883,7 @@ contract.skip('TimelockController', function (accounts) {
       );
     });
 
-    it('call out of gas', async function () {
+    it.skip('call out of gas', async function () {
       const operation = genOperation(
         this.callreceivermock.address,
         0,
@@ -915,7 +915,7 @@ contract.skip('TimelockController', function (accounts) {
       );
     });
 
-    it('call payable with eth', async function () {
+    it.skip('call payable with eth', async function () {
       const operation = genOperation(
         this.callreceivermock.address,
         1,
@@ -951,7 +951,7 @@ contract.skip('TimelockController', function (accounts) {
       expect(await web3.eth.getBalance(this.callreceivermock.address)).to.be.bignumber.equal(web3.utils.toBN(1));
     });
 
-    it('call nonpayable with eth', async function () {
+    it.skip('call nonpayable with eth', async function () {
       const operation = genOperation(
         this.callreceivermock.address,
         1,
@@ -990,7 +990,7 @@ contract.skip('TimelockController', function (accounts) {
       expect(await web3.eth.getBalance(this.callreceivermock.address)).to.be.bignumber.equal(web3.utils.toBN(0));
     });
 
-    it('call reverting with eth', async function () {
+    it.skip('call reverting with eth', async function () {
       const operation = genOperation(
         this.callreceivermock.address,
         1,

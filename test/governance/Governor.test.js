@@ -17,7 +17,7 @@ const Token = artifacts.require('ERC20VotesMock');
 const Governor = artifacts.require('GovernorMock');
 const CallReceiver = artifacts.require('CallReceiverMock');
 
-contract.skip('Governor', function (accounts) {
+contract('Governor', function (accounts) {
   const [ owner, proposer, voter1, voter2, voter3, voter4 ] = accounts;
 
   const name = 'OZ-Governor';
@@ -43,7 +43,7 @@ contract.skip('Governor', function (accounts) {
     'Governor',
   ]);
 
-  it('deployment check', async function () {
+  it.skip('deployment check', async function () {
     expect(await this.mock.name()).to.be.equal(name);
     expect(await this.mock.token()).to.be.equal(this.token.address);
     expect(await this.mock.votingDelay()).to.be.bignumber.equal('4');
@@ -774,7 +774,7 @@ contract.skip('Governor', function (accounts) {
   });
 
   describe('Proposal length', function () {
-    it('empty', async function () {
+    it.skip('empty', async function () {
       await expectRevert(
         this.mock.propose(
           [],
@@ -786,7 +786,7 @@ contract.skip('Governor', function (accounts) {
       );
     });
 
-    it('missmatch #1', async function () {
+    it.skip('missmatch #1', async function () {
       await expectRevert(
         this.mock.propose(
           [ ],
@@ -798,7 +798,7 @@ contract.skip('Governor', function (accounts) {
       );
     });
 
-    it('missmatch #2', async function () {
+    it.skip('missmatch #2', async function () {
       await expectRevert(
         this.mock.propose(
           [ this.receiver.address ],
@@ -810,7 +810,7 @@ contract.skip('Governor', function (accounts) {
       );
     });
 
-    it('missmatch #3', async function () {
+    it.skip('missmatch #3', async function () {
       await expectRevert(
         this.mock.propose(
           [ this.receiver.address ],
@@ -930,15 +930,15 @@ contract.skip('Governor', function (accounts) {
     });
 
     describe('update protected', function () {
-      it('setVotingDelay', async function () {
+      it.skip('setVotingDelay', async function () {
         await expectRevert(this.mock.setVotingDelay('0'), 'Governor: onlyGovernance');
       });
 
-      it('setVotingPeriod', async function () {
+      it.skip('setVotingPeriod', async function () {
         await expectRevert(this.mock.setVotingPeriod('32'), 'Governor: onlyGovernance');
       });
 
-      it('setProposalThreshold', async function () {
+      it.skip('setProposalThreshold', async function () {
         await expectRevert(this.mock.setProposalThreshold('1000000000000000000'), 'Governor: onlyGovernance');
       });
     });
