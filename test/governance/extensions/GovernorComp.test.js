@@ -9,7 +9,7 @@ const Token = artifacts.require('ERC20VotesCompMock');
 const Governor = artifacts.require('GovernorCompMock');
 const CallReceiver = artifacts.require('CallReceiverMock');
 
-contract.skip('GovernorComp', function (accounts) {
+contract('GovernorComp', function (accounts) {
   const [ owner, voter1, voter2, voter3, voter4 ] = accounts;
 
   const name = 'OZ-Governor';
@@ -30,7 +30,7 @@ contract.skip('GovernorComp', function (accounts) {
     await this.token.delegate(voter4, { from: voter4 });
   });
 
-  it('deployment check', async function () {
+  it.skip('deployment check', async function () {
     expect(await this.mock.name()).to.be.equal(name);
     expect(await this.mock.token()).to.be.equal(this.token.address);
     expect(await this.mock.votingDelay()).to.be.bignumber.equal('4');
