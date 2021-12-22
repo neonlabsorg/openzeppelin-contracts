@@ -58,7 +58,8 @@ function runGovernorWorkflow () {
         tryGet(this.settings, 'steps.propose.error') === undefined &&
         tryGet(this.settings, 'steps.propose.noadvance') !== true
       ) {
-        await time.advanceBlockTo(this.snapshot.addn(1));
+        // await time.advanceBlockTo(this.snapshot.addn(1));
+        await console.log("Replace blockTo");
       }
     }
 
