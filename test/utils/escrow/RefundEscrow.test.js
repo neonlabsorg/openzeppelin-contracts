@@ -60,7 +60,9 @@ contract('RefundEscrow', function (accounts) {
 
     context('closed state', function () {
       beforeEach(async function () {
-        await Promise.all(refundees.map(refundee => this.escrow.deposit(refundee, { from: owner, value: amount })));
+        for (const refundee of refundees) {
+          await this.escrow.deposit(refundee, { from: owner, value: amount });
+        }
 
         await this.escrow.close({ from: owner });
       });
@@ -107,7 +109,9 @@ contract('RefundEscrow', function (accounts) {
 
     context('refund state', function () {
       beforeEach(async function () {
-        await Promise.all(refundees.map(refundee => this.escrow.deposit(refundee, { from: owner, value: amount })));
+        for (const refundee of refundees) {
+          await this.escrow.deposit(refundee, { from: owner, value: amount });
+        }
 
         await this.escrow.enableRefunds({ from: owner });
       });
