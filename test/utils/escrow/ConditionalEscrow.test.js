@@ -13,7 +13,7 @@ contract('ConditionalEscrow', function (accounts) {
   context('when withdrawal is allowed', function () {
     beforeEach(async function () {
       for (const payee of otherAccounts) {
-          await this.escrow.setAllowed(payee, true);
+        await this.escrow.setAllowed(payee, true);
       }
     });
 
