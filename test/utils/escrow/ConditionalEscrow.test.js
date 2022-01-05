@@ -12,7 +12,9 @@ contract('ConditionalEscrow', function (accounts) {
 
   context('when withdrawal is allowed', function () {
     beforeEach(async function () {
-      await Promise.all(otherAccounts.map(payee => this.escrow.setAllowed(payee, true)));
+      for (const payee of otherAccounts) {
+        await this.escrow.setAllowed(payee, true);
+      }
     });
 
     shouldBehaveLikeEscrow(owner, otherAccounts);

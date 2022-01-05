@@ -108,7 +108,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy (createPro
 
         describe('when the sender is the admin', function () {
           const from = proxyAdminAddress;
-          const value = 1e5;
+          const value = 1e9;
 
           beforeEach(async function () {
             this.receipt = await this.proxy.upgradeToAndCall(this.behavior.address, initializeData, { from, value });
