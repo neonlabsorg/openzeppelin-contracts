@@ -69,7 +69,7 @@ contract('BeaconProxy', function (accounts) {
 
     it('no initialization', async function () {
       const data = Buffer.from('');
-      const balance = '10';
+      const balance = '10000000000';
       this.proxy = await BeaconProxy.new(this.beacon.address, data, { value: balance });
       await this.assertInitialized({ value: '0', balance });
     });
@@ -88,7 +88,7 @@ contract('BeaconProxy', function (accounts) {
       const data = this.implementationV0.contract.methods
         .initializePayableWithValue(value)
         .encodeABI();
-      const balance = '100';
+      const balance = '100000000000';
       this.proxy = await BeaconProxy.new(this.beacon.address, data, { value: balance });
       await this.assertInitialized({ value, balance });
     });

@@ -59,7 +59,7 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
     });
 
     describe('when sending some balance', function () {
-      const value = 10e5;
+      const value = 10e9;
 
       beforeEach('creating proxy', async function () {
         this.proxy = (
@@ -95,7 +95,7 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
       });
 
       describe('when sending some balance', function () {
-        const value = 10e5;
+        const value = 10e9;
 
         it('reverts', async function () {
           await expectRevert.unspecified(
@@ -125,7 +125,7 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
       });
 
       describe('when sending some balance', function () {
-        const value = 10e5;
+        const value = 10e9;
 
         beforeEach('creating proxy', async function () {
           this.proxy = (
@@ -166,7 +166,7 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
       });
 
       describe('when sending some balance', function () {
-        const value = 10e5;
+        const value = 10e9;
 
         it('reverts', async function () {
           await expectRevert.unspecified(
@@ -197,7 +197,7 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
       });
 
       describe('when sending some balance', function () {
-        const value = 10e5;
+        const value = 10e9;
 
         beforeEach('creating proxy', async function () {
           this.proxy = (
