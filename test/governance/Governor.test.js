@@ -43,7 +43,7 @@ contract('Governor', function (accounts) {
     'Governor',
   ]);
 
-  it.skip('deployment check', async function () {
+  it('deployment check', async function () {
     expect(await this.mock.name()).to.be.equal(name);
     expect(await this.mock.token()).to.be.equal(this.token.address);
     expect(await this.mock.votingDelay()).to.be.bignumber.equal('4');
@@ -563,8 +563,7 @@ contract('Governor', function (accounts) {
 
         await time.advanceBlock();
         
-        // FIXME: Skip this check by issue https://github.com/neonlabsorg/openzeppelin-contracts/issues/8
-        // expect(await this.mock.state(this.id)).to.be.bignumber.equal(Enums.ProposalState.Active);
+        expect(await this.mock.state(this.id)).to.be.bignumber.equal(Enums.ProposalState.Active);
       });
       runGovernorWorkflow();
     });

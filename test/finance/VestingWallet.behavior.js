@@ -19,8 +19,7 @@ function shouldBehaveLikeVesting (beneficiary) {
     }
   });
   
-  // FIXME: Skip this check by issue https://github.com/neonlabsorg/openzeppelin-contracts/issues/8
-  it.skip('execute vesting schedule', async function () {
+  it('execute vesting schedule', async function () {
     const [ method, ...args ] = this.token
       ? [ 'release(address)', this.token.address ]
       : [ 'release()' ];

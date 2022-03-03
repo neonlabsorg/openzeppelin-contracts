@@ -53,8 +53,7 @@ contract('Address', function (accounts) {
 
       it('sends non-zero amounts', async function () {
         await this.mock.sendValue(recipient, funds.subn(1));
-        // FIXME: Skip this check by issue https://github.com/neonlabsorg/openzeppelin-contracts/issues/8
-        // expect(await this.recipientTracker.delta()).to.be.bignumber.equal(funds.subn(1));
+        expect(await this.recipientTracker.delta()).to.be.bignumber.equal(funds.subn(1));
       });
 
       it('sends the whole balance', async function () {
