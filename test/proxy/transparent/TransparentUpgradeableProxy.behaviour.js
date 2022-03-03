@@ -185,8 +185,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy (createPro
             expectEvent(this.receipt, 'Upgraded', { implementation: this.behaviorV1.address });
           });
           
-          // FIXME: Skip this check by issue https://github.com/neonlabsorg/openzeppelin-contracts/issues/8
-          it.skip('calls the \'initialize\' function and sends given value to the proxy', async function () {
+          it('calls the \'initialize\' function and sends given value to the proxy', async function () {
             const migratable = new MigratableMockV1(this.proxyAddress);
 
             const x = await migratable.x();
@@ -212,8 +211,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy (createPro
               expectEvent(this.receipt, 'Upgraded', { implementation: this.behaviorV2.address });
             });
             
-            // FIXME: Skip this check by issue https://github.com/neonlabsorg/openzeppelin-contracts/issues/8
-            it.skip('calls the \'migrate\' function and sends given value to the proxy', async function () {
+            it('calls the \'migrate\' function and sends given value to the proxy', async function () {
               const migratable = new MigratableMockV2(this.proxyAddress);
 
               const x = await migratable.x();
@@ -242,8 +240,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy (createPro
                 expectEvent(this.receipt, 'Upgraded', { implementation: this.behaviorV3.address });
               });
               
-              // FIXME: Skip this check by issue https://github.com/neonlabsorg/openzeppelin-contracts/issues/8
-              it.skip('calls the \'migrate\' function and sends given value to the proxy', async function () {
+              it('calls the \'migrate\' function and sends given value to the proxy', async function () {
                 const migratable = new MigratableMockV3(this.proxyAddress);
 
                 const x = await migratable.x();

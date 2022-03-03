@@ -139,8 +139,7 @@ contract('GovernorTimelockCompound', function (accounts) {
       };
     });
     afterEach(async function () {
-      // FIXME: Skip this check by issue https://github.com/neonlabsorg/openzeppelin-contracts/issues/8
-      // expect(await this.mock.state(this.id)).to.be.bignumber.equal(Enums.ProposalState.Succeeded);
+      expect(await this.mock.state(this.id)).to.be.bignumber.equal(Enums.ProposalState.Succeeded);
     });
     runGovernorWorkflow();
   });
@@ -187,8 +186,7 @@ contract('GovernorTimelockCompound', function (accounts) {
       };
     });
     afterEach(async function () {
-      // FIXME: Skip this check by issue https://github.com/neonlabsorg/openzeppelin-contracts/issues/8
-      //expect(await this.mock.state(this.id)).to.be.bignumber.equal(Enums.ProposalState.Expired);
+      expect(await this.mock.state(this.id)).to.be.bignumber.equal(Enums.ProposalState.Expired);
     });
     runGovernorWorkflow();
   });
@@ -269,8 +267,7 @@ contract('GovernorTimelockCompound', function (accounts) {
       };
     });
     afterEach(async function () {
-      // FIXME: Skip this check by issue https://github.com/neonlabsorg/openzeppelin-contracts/issues/8
-      //expect(await this.mock.state(this.id)).to.be.bignumber.equal(Enums.ProposalState.Succeeded);
+      expect(await this.mock.state(this.id)).to.be.bignumber.equal(Enums.ProposalState.Succeeded);
 
       expectEvent(
         await this.mock.cancel(...this.settings.proposal.slice(0, -1), this.descriptionHash),
