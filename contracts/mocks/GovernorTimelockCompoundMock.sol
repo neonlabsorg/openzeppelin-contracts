@@ -15,7 +15,7 @@ contract GovernorTimelockCompoundMock is
 {
     constructor(
         string memory name_,
-        ERC20Votes token_,
+        IVotes token_,
         uint256 votingDelay_,
         uint256 votingPeriod_,
         ICompoundTimelock timelock_,
@@ -90,16 +90,6 @@ contract GovernorTimelockCompoundMock is
         bytes32 salt
     ) internal virtual override(Governor, GovernorTimelockCompound) returns (uint256 proposalId) {
         return super._cancel(targets, values, calldatas, salt);
-    }
-
-    function getVotes(address account, uint256 blockNumber)
-        public
-        view
-        virtual
-        override(IGovernor, GovernorVotes)
-        returns (uint256)
-    {
-        return super.getVotes(account, blockNumber);
     }
 
     function _executor() internal view virtual override(Governor, GovernorTimelockCompound) returns (address) {
