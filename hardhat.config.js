@@ -8,51 +8,62 @@
 
 const fs = require('fs');
 const path = require('path');
+
+const getStringValue = (input) => {
+  return input === undefined ? '' : input;
+};
+
+const getArrayValue = (input) => {
+  return input === undefined ? [] : String(input).split(',')
+}
+
+const Config = {
+  privateKeys: getArrayValue(process.env.PRIVATE_KEYS),
+  networkId: getStringValue(process.env.NETWORK_ID),
+  proxyUrl: getStringValue(process.env.PROXY_URL)
+};
+
 const argv = require('yargs/yargs')()
   .env('')
   .options({
     ci: {
       type: 'boolean',
-      default: false,
+      default: false
     },
     coverage: {
       type: 'boolean',
-      default: false,
+      default: false
     },
     gas: {
       alias: 'enableGasReport',
       type: 'boolean',
-      default: false,
+      default: false
     },
     mode: {
       alias: 'compileMode',
       type: 'string',
-      choices: [ 'production', 'development' ],
-      default: 'development',
+      choices: ['production', 'development'],
+      default: 'development'
     },
     compiler: {
       alias: 'compileVersion',
       type: 'string',
-      default: '0.8.3',
+      default: '0.8.10'
     },
     coinmarketcap: {
       alias: 'coinmarketcapApiKey',
-      type: 'string',
-    },
-  })
-  .argv;
+      type: 'string'
+    }
+  }).argv;
 
 require('@nomiclabs/hardhat-truffle5');
-
-if (argv.enableGasReport) {
-  require('hardhat-gas-reporter');
-}
 
 for (const f of fs.readdirSync(path.join(__dirname, 'hardhat'))) {
   require(path.join(__dirname, 'hardhat', f));
 }
 
-const withOptimizations = argv.enableGasReport || argv.compileMode === 'production';
+const withOptimizations =
+  argv.enableGasReport || argv.compileMode === 'production';
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -63,24 +74,37 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: withOptimizations,
-        runs: 200,
-      },
-    },
+        runs: 200
+      }
+    }
   },
+  defaultNetwork: 'neonlabs',
   networks: {
-    hardhat: {
-      blockGasLimit: 10000000,
+    neonlabs: {
+      url: Config.proxyUrl,
+      accounts: Config.privateKeys,
+      network_id: parseInt(Config.networkId),
+      gas: "auto",
+      gasPrice: "auto",
       allowUnlimitedContractSize: !withOptimizations,
-    },
+      timeout: 180000,
+      isFork: true
+    }
   },
   gasReporter: {
     currency: 'USD',
     outputFile: argv.ci ? 'gas-report.txt' : undefined,
-    coinmarketcap: argv.coinmarketcap,
+    coinmarketcap: argv.coinmarketcap
   },
+  mocha: {
+    timeout: 1800000,
+    reporter: 'mocha-multi-reporters',
+    reporterOption: {
+      "reporterEnabled": "spec, allure-mocha",
+      "allureMochaReporterOptions": {
+        "resultsDir": "../../allure-results"
+      }
+    },
+    diff: true
+  }
 };
-
-if (argv.coverage) {
-  require('solidity-coverage');
-  module.exports.networks.hardhat.initialBaseFeePerGas = 0;
-}
