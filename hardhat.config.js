@@ -97,7 +97,7 @@ module.exports = {
     coinmarketcap: argv.coinmarketcap
   },
   mocha: {
-    timeout: 1800000,
+    timeout: 600000,
     reporter: 'mocha-multi-reporters',
     reporterOption: {
       "reporterEnabled": "spec, allure-mocha",
