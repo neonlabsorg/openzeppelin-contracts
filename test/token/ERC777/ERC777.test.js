@@ -1,5 +1,6 @@
-const { BN, constants, expectEvent, expectRevert, singletons } = require('@openzeppelin/test-helpers');
+const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { ZERO_ADDRESS } = constants;
+const { NeonERC1820Registry } = require('../../helpers/eip1820')
 
 const { expect } = require('chai');
 
@@ -32,7 +33,7 @@ contract('ERC777', function (accounts) {
   const defaultOperators = [defaultOperatorA, defaultOperatorB];
 
   beforeEach(async function () {
-    this.erc1820 = await singletons.ERC1820Registry(registryFunder);
+    this.erc1820 = await NeonERC1820Registry(registryFunder);
   });
 
   context('with default operators', function () {
@@ -577,7 +578,7 @@ contract('ERC777', function (accounts) {
 
   describe('relative order of hooks', function () {
     beforeEach(async function () {
-      await singletons.ERC1820Registry(registryFunder);
+      await NeonERC1820Registry(registryFunder);
       this.sender = await ERC777SenderRecipientMock.new();
       await this.sender.registerRecipient(this.sender.address);
       await this.sender.registerSender(this.sender.address);
