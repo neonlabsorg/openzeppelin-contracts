@@ -54,15 +54,13 @@ contract('RefundEscrow', function (accounts) {
         'Ownable: caller is not the owner',
       );
 
-      const { logs } = await this.escrow.close({ from: owner });
-      expectEvent.inLogs(logs, 'RefundsClosed');
+      const receipt = await this.escrow.close({ from: owner });
+      expectEvent(receipt, 'RefundsClosed');
     });
 
     context('closed state', function () {
       beforeEach(async function () {
-        for (const refundee of refundees) {
-          await this.escrow.deposit(refundee, { from: owner, value: amount });
-        }
+        await Promise.all(refundees.map(refundee => this.escrow.deposit(refundee, { from: owner, value: amount })));
 
         await this.escrow.close({ from: owner });
       });
@@ -103,15 +101,13 @@ contract('RefundEscrow', function (accounts) {
         'Ownable: caller is not the owner',
       );
 
-      const { logs } = await this.escrow.enableRefunds({ from: owner });
-      expectEvent.inLogs(logs, 'RefundsEnabled');
+      const receipt = await this.escrow.enableRefunds({ from: owner });
+      expectEvent(receipt, 'RefundsEnabled');
     });
 
     context('refund state', function () {
       beforeEach(async function () {
-        for (const refundee of refundees) {
-          await this.escrow.deposit(refundee, { from: owner, value: amount });
-        }
+        await Promise.all(refundees.map(refundee => this.escrow.deposit(refundee, { from: owner, value: amount })));
 
         await this.escrow.enableRefunds({ from: owner });
       });

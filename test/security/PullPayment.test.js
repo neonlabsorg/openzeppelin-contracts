@@ -15,23 +15,23 @@ contract('PullPayment', function (accounts) {
 
   describe('payments', function () {
     it('can record an async payment correctly', async function () {
-      await this.contract.callTransfer(payee1, 100e9, { from: payer });
-      expect(await this.contract.payments(payee1)).to.be.bignumber.equal('100000000000');
+      await this.contract.callTransfer(payee1, 100, { from: payer });
+      expect(await this.contract.payments(payee1)).to.be.bignumber.equal('100');
     });
 
     it('can add multiple balances on one account', async function () {
-      await this.contract.callTransfer(payee1, 200e9, { from: payer });
-      await this.contract.callTransfer(payee1, 300e9, { from: payer });
-      expect(await this.contract.payments(payee1)).to.be.bignumber.equal('500000000000');
+      await this.contract.callTransfer(payee1, 200, { from: payer });
+      await this.contract.callTransfer(payee1, 300, { from: payer });
+      expect(await this.contract.payments(payee1)).to.be.bignumber.equal('500');
     });
 
     it('can add balances on multiple accounts', async function () {
-      await this.contract.callTransfer(payee1, 200e9, { from: payer });
-      await this.contract.callTransfer(payee2, 300e9, { from: payer });
+      await this.contract.callTransfer(payee1, 200, { from: payer });
+      await this.contract.callTransfer(payee2, 300, { from: payer });
 
-      expect(await this.contract.payments(payee1)).to.be.bignumber.equal('200000000000');
+      expect(await this.contract.payments(payee1)).to.be.bignumber.equal('200');
 
-      expect(await this.contract.payments(payee2)).to.be.bignumber.equal('300000000000');
+      expect(await this.contract.payments(payee2)).to.be.bignumber.equal('300');
     });
   });
 

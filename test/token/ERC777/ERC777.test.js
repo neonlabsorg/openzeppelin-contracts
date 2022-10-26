@@ -1,6 +1,5 @@
-const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
+const { BN, constants, expectEvent, expectRevert, singletons } = require('@openzeppelin/test-helpers');
 const { ZERO_ADDRESS } = constants;
-const { NeonERC1820Registry } = require('../../helpers/eip1820')
 
 const { expect } = require('chai');
 
@@ -33,7 +32,7 @@ contract('ERC777', function (accounts) {
   const defaultOperators = [defaultOperatorA, defaultOperatorB];
 
   beforeEach(async function () {
-    this.erc1820 = await NeonERC1820Registry(registryFunder);
+    this.erc1820 = await singletons.ERC1820Registry(registryFunder);
   });
 
   context('with default operators', function () {
@@ -321,8 +320,8 @@ contract('ERC777', function (accounts) {
       it('non-operators can be revoked', async function () {
         expect(await this.token.isOperatorFor(newOperator, holder)).to.equal(false);
 
-        const { logs } = await this.token.revokeOperator(newOperator, { from: holder });
-        expectEvent.inLogs(logs, 'RevokedOperator', { operator: newOperator, tokenHolder: holder });
+        const receipt = await this.token.revokeOperator(newOperator, { from: holder });
+        expectEvent(receipt, 'RevokedOperator', { operator: newOperator, tokenHolder: holder });
 
         expect(await this.token.isOperatorFor(newOperator, holder)).to.equal(false);
       });
@@ -330,8 +329,8 @@ contract('ERC777', function (accounts) {
       it('non-operators can be authorized', async function () {
         expect(await this.token.isOperatorFor(newOperator, holder)).to.equal(false);
 
-        const { logs } = await this.token.authorizeOperator(newOperator, { from: holder });
-        expectEvent.inLogs(logs, 'AuthorizedOperator', { operator: newOperator, tokenHolder: holder });
+        const receipt = await this.token.authorizeOperator(newOperator, { from: holder });
+        expectEvent(receipt, 'AuthorizedOperator', { operator: newOperator, tokenHolder: holder });
 
         expect(await this.token.isOperatorFor(newOperator, holder)).to.equal(true);
       });
@@ -346,15 +345,15 @@ contract('ERC777', function (accounts) {
         });
 
         it('can be re-authorized', async function () {
-          const { logs } = await this.token.authorizeOperator(newOperator, { from: holder });
-          expectEvent.inLogs(logs, 'AuthorizedOperator', { operator: newOperator, tokenHolder: holder });
+          const receipt = await this.token.authorizeOperator(newOperator, { from: holder });
+          expectEvent(receipt, 'AuthorizedOperator', { operator: newOperator, tokenHolder: holder });
 
           expect(await this.token.isOperatorFor(newOperator, holder)).to.equal(true);
         });
 
         it('can be revoked', async function () {
-          const { logs } = await this.token.revokeOperator(newOperator, { from: holder });
-          expectEvent.inLogs(logs, 'RevokedOperator', { operator: newOperator, tokenHolder: holder });
+          const receipt = await this.token.revokeOperator(newOperator, { from: holder });
+          expectEvent(receipt, 'RevokedOperator', { operator: newOperator, tokenHolder: holder });
 
           expect(await this.token.isOperatorFor(newOperator, holder)).to.equal(false);
         });
@@ -362,15 +361,15 @@ contract('ERC777', function (accounts) {
 
       describe('default operators', function () {
         it('can be re-authorized', async function () {
-          const { logs } = await this.token.authorizeOperator(defaultOperatorA, { from: holder });
-          expectEvent.inLogs(logs, 'AuthorizedOperator', { operator: defaultOperatorA, tokenHolder: holder });
+          const receipt = await this.token.authorizeOperator(defaultOperatorA, { from: holder });
+          expectEvent(receipt, 'AuthorizedOperator', { operator: defaultOperatorA, tokenHolder: holder });
 
           expect(await this.token.isOperatorFor(defaultOperatorA, holder)).to.equal(true);
         });
 
         it('can be revoked', async function () {
-          const { logs } = await this.token.revokeOperator(defaultOperatorA, { from: holder });
-          expectEvent.inLogs(logs, 'RevokedOperator', { operator: defaultOperatorA, tokenHolder: holder });
+          const receipt = await this.token.revokeOperator(defaultOperatorA, { from: holder });
+          expectEvent(receipt, 'RevokedOperator', { operator: defaultOperatorA, tokenHolder: holder });
 
           expect(await this.token.isOperatorFor(defaultOperatorA, holder)).to.equal(false);
         });
@@ -400,8 +399,8 @@ contract('ERC777', function (accounts) {
           });
 
           it('revoked default operator can be re-authorized', async function () {
-            const { logs } = await this.token.authorizeOperator(defaultOperatorA, { from: holder });
-            expectEvent.inLogs(logs, 'AuthorizedOperator', { operator: defaultOperatorA, tokenHolder: holder });
+            const receipt = await this.token.authorizeOperator(defaultOperatorA, { from: holder });
+            expectEvent(receipt, 'AuthorizedOperator', { operator: defaultOperatorA, tokenHolder: holder });
 
             expect(await this.token.isOperatorFor(defaultOperatorA, holder)).to.equal(true);
           });
@@ -578,7 +577,7 @@ contract('ERC777', function (accounts) {
 
   describe('relative order of hooks', function () {
     beforeEach(async function () {
-      await NeonERC1820Registry(registryFunder);
+      await singletons.ERC1820Registry(registryFunder);
       this.sender = await ERC777SenderRecipientMock.new();
       await this.sender.registerRecipient(this.sender.address);
       await this.sender.registerSender(this.sender.address);

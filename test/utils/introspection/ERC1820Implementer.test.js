@@ -1,6 +1,5 @@
-const { expectRevert } = require('@openzeppelin/test-helpers');
+const { expectRevert, singletons } = require('@openzeppelin/test-helpers');
 const { bufferToHex, keccakFromString } = require('ethereumjs-util');
-const { NeonERC1820Registry } = require('../../helpers/eip1820')
 
 const { expect } = require('chai');
 
@@ -13,7 +12,7 @@ contract('ERC1820Implementer', function (accounts) {
 
   beforeEach(async function () {
     this.implementer = await ERC1820ImplementerMock.new();
-    this.registry = await NeonERC1820Registry(registryFunder);
+    this.registry = await singletons.ERC1820Registry(registryFunder);
 
     this.interfaceA = bufferToHex(keccakFromString('interfaceA'));
     this.interfaceB = bufferToHex(keccakFromString('interfaceB'));

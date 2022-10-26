@@ -1,15 +1,9 @@
-const { BN, expectRevert } = require('@openzeppelin/test-helpers');
-const ethereumjsUtil = require('ethereumjs-util');
+const { expectRevert } = require('@openzeppelin/test-helpers');
+const { getSlot, ImplementationSlot } = require('../helpers/erc1967');
 
 const { expect } = require('chai');
 
 const DummyImplementation = artifacts.require('DummyImplementation');
-
-const IMPLEMENTATION_LABEL = 'eip1967.proxy.implementation';
-
-function toChecksumAddress (address) {
-  return ethereumjsUtil.toChecksumAddress('0x' + address.replace(/^0x/, '').padStart(40, '0'));
-}
 
 module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress, proxyCreator) {
   it('cannot be initialized with a non-contract address', async function () {
@@ -27,10 +21,10 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
   });
 
   const assertProxyInitialization = function ({ value, balance }) {
-    it.skip('sets the implementation address', async function () {
-      const slot = '0x' + new BN(ethereumjsUtil.keccak256(Buffer.from(IMPLEMENTATION_LABEL))).subn(1).toString(16);
-      const implementation = toChecksumAddress((await web3.eth.getStorageAt(this.proxy, slot)).substr(-40));
-      expect(implementation).to.be.equal(this.implementation);
+    it('sets the implementation address', async function () {
+      const implementationSlot = await getSlot(this.proxy, ImplementationSlot);
+      const implementationAddress = web3.utils.toChecksumAddress(implementationSlot.substr(-40));
+      expect(implementationAddress).to.be.equal(this.implementation);
     });
 
     it('initializes the proxy', async function () {
@@ -59,7 +53,7 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
     });
 
     describe('when sending some balance', function () {
-      const value = 10e9;
+      const value = 10e5;
 
       beforeEach('creating proxy', async function () {
         this.proxy = (
@@ -95,7 +89,7 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
       });
 
       describe('when sending some balance', function () {
-        const value = 10e9;
+        const value = 10e5;
 
         it('reverts', async function () {
           await expectRevert.unspecified(
@@ -125,7 +119,7 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
       });
 
       describe('when sending some balance', function () {
-        const value = 10e9;
+        const value = 10e5;
 
         beforeEach('creating proxy', async function () {
           this.proxy = (
@@ -166,7 +160,7 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
       });
 
       describe('when sending some balance', function () {
-        const value = 10e9;
+        const value = 10e5;
 
         it('reverts', async function () {
           await expectRevert.unspecified(
@@ -197,7 +191,7 @@ module.exports = function shouldBehaveLikeProxy (createProxy, proxyAdminAddress,
       });
 
       describe('when sending some balance', function () {
-        const value = 10e9;
+        const value = 10e5;
 
         beforeEach('creating proxy', async function () {
           this.proxy = (

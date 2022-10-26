@@ -14,7 +14,7 @@ contract MyGovernor is
     GovernorVotes,
     GovernorVotesQuorumFraction
 {
-    constructor(ERC20Votes _token, TimelockController _timelock)
+    constructor(IVotes _token, TimelockController _timelock)
         Governor("MyGovernor")
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
@@ -42,15 +42,6 @@ contract MyGovernor is
         returns (uint256)
     {
         return super.quorum(blockNumber);
-    }
-
-    function getVotes(address account, uint256 blockNumber)
-        public
-        view
-        override(IGovernor, GovernorVotes)
-        returns (uint256)
-    {
-        return super.getVotes(account, blockNumber);
     }
 
     function state(uint256 proposalId)
