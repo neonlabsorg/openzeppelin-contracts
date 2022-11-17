@@ -39,7 +39,7 @@ module.exports = function shouldBehaveLikeClone (createClone) {
       });
 
       describe('when sending some balance', function () {
-        const value = 10e9;
+        const value = 10e5;
 
         it('reverts', async function () {
           await expectRevert.unspecified(
@@ -67,7 +67,7 @@ module.exports = function shouldBehaveLikeClone (createClone) {
       });
 
       describe('when sending some balance', function () {
-        const value = 10e9;
+        const value = 10e5;
 
         beforeEach('creating proxy', async function () {
           this.proxy = (
@@ -103,7 +103,7 @@ module.exports = function shouldBehaveLikeClone (createClone) {
       });
 
       describe('when sending some balance', function () {
-        const value = 10e9;
+        const value = 10e5;
 
         it('reverts', async function () {
           await expectRevert.unspecified(
@@ -132,7 +132,7 @@ module.exports = function shouldBehaveLikeClone (createClone) {
       });
 
       describe('when sending some balance', function () {
-        const value = 10e9;
+        const value = 10e5;
 
         beforeEach('creating proxy', async function () {
           this.proxy = (

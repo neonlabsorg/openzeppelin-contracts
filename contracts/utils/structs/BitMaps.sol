@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts v4.3.2 (utils/structs/BitMaps.sol)
+// OpenZeppelin Contracts (last updated v4.8.0-rc.2) (utils/structs/BitMaps.sol)
 pragma solidity ^0.8.0;
 
 /**
  * @dev Library for managing uint256 to bool mapping in a compact and efficient way, providing the keys are sequential.
- * Largelly inspired by Uniswap's https://github.com/Uniswap/merkle-distributor/blob/master/contracts/MerkleDistributor.sol[merkle-distributor].
+ * Largely inspired by Uniswap's https://github.com/Uniswap/merkle-distributor/blob/master/contracts/MerkleDistributor.sol[merkle-distributor].
  */
 library BitMaps {
     struct BitMap {

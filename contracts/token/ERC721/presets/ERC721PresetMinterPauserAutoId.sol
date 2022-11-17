@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts v4.3.2 (token/ERC721/presets/ERC721PresetMinterPauserAutoId.sol)
+// OpenZeppelin Contracts (last updated v4.8.0-rc.2) (token/ERC721/presets/ERC721PresetMinterPauserAutoId.sol)
 
 pragma solidity ^0.8.0;
 
@@ -25,6 +25,8 @@ import "../../../utils/Counters.sol";
  * The account that deploys the contract will be granted the minter and pauser
  * roles, as well as the default admin role, which will let it grant both minter
  * and pauser roles to other accounts.
+ *
+ * _Deprecated in favor of https://wizard.openzeppelin.com/[Contracts Wizard]._
  */
 contract ERC721PresetMinterPauserAutoId is
     Context,
@@ -117,9 +119,10 @@ contract ERC721PresetMinterPauserAutoId is
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
+        uint256 firstTokenId,
+        uint256 batchSize
     ) internal virtual override(ERC721, ERC721Enumerable, ERC721Pausable) {
-        super._beforeTokenTransfer(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
 
     /**

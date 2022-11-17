@@ -5,7 +5,7 @@ NOTE: This document is better viewed at https://docs.openzeppelin.com/contracts/
 
 == List of standardized interfaces
 These interfaces are available as `.sol` files, and also as compiler `.json` ABI files (through the npm package). These
-are usefull to interract with third party contracts that implement them.
+are useful to interact with third party contracts that implement them.
 
 - {IERC20}
 - {IERC20Metadata}
@@ -24,10 +24,12 @@ are usefull to interract with third party contracts that implement them.
 - {IERC1363}
 - {IERC1820Implementer}
 - {IERC1820Registry}
+- {IERC1822Proxiable}
 - {IERC2612}
 - {IERC2981}
 - {IERC3156FlashLender}
 - {IERC3156FlashBorrower}
+- {IERC4626}
 
 == Detailed ABI
 
@@ -41,6 +43,8 @@ are usefull to interract with third party contracts that implement them.
 
 {{IERC1820Registry}}
 
+{{IERC1822Proxiable}}
+
 {{IERC2612}}
 
 {{IERC2981}}
@@ -48,3 +52,5 @@ are usefull to interract with third party contracts that implement them.
 {{IERC3156FlashLender}}
 
 {{IERC3156FlashBorrower}}
+
+{{IERC4626}}

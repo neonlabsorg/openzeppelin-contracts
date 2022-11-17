@@ -40,7 +40,9 @@ Other extensions can customize the behavior or interface in multiple ways.
 
 * {GovernorCompatibilityBravo}: Extends the interface to be fully `GovernorBravo`-compatible. Note that events are compatible regardless of whether this extension is included or not.
 
-* {GovernorSettings}: Manages some of the settings (voting delay, voting period duration, and proposal threshold) in a way that can be updated through a governance proposal, without requiering an upgrade.
+* {GovernorSettings}: Manages some of the settings (voting delay, voting period duration, and proposal threshold) in a way that can be updated through a governance proposal, without requiring an upgrade.
+
+* {GovernorPreventLateQuorum}: Ensures there is a minimum voting period after quorum is reached as a security protection against large voters.
 
 In addition to modules and extensions, the core contract requires a few virtual functions to be implemented to your particular specifications:
 
@@ -48,7 +50,7 @@ In addition to modules and extensions, the core contract requires a few virtual 
 * <<Governor-votingPeriod-,`votingPeriod()`>>: Delay (in number of blocks) since the proposal starts until voting ends.
 * <<Governor-quorum-uint256-,`quorum(uint256 blockNumber)`>>: Quorum required for a proposal to be successful. This function includes a `blockNumber` argument so the quorum can adapt through time, for example, to follow a token's `totalSupply`.
 
-NOTE: Functions of the `Governor` contract do not include access control. If you want to restrict access, you should add these checks by overloading the particular functions. Among these, {Governor-_cancel} is internal by default, and you will have to expose it (which the right access control mechanism) yourself if this function is needed.
+NOTE: Functions of the `Governor` contract do not include access control. If you want to restrict access, you should add these checks by overloading the particular functions. Among these, {Governor-_cancel} is internal by default, and you will have to expose it (with the right access control mechanism) yourself if this function is needed.
 
 === Core
 
@@ -74,15 +76,21 @@ NOTE: Functions of the `Governor` contract do not include access control. If you
 
 {{GovernorSettings}}
 
+{{GovernorPreventLateQuorum}}
+
 {{GovernorCompatibilityBravo}}
 
 === Deprecated
 
 {{GovernorProposalThreshold}}
 
+== Utils
+
+{{Votes}}
+
 == Timelock
 
-In a governance system, the {TimelockController} contract is in carge of introducing a delay between a proposal and its execution. It can be used with or without a {Governor}.
+In a governance system, the {TimelockController} contract is in charge of introducing a delay between a proposal and its execution. It can be used with or without a {Governor}.
 
 {{TimelockController}}
 
@@ -110,7 +118,7 @@ Both operations contain:
 
 * *Target*, the address of the smart contract that the timelock should operate on.
 * *Value*, in wei, that should be sent with the transaction. Most of the time this will be 0. Ether can be deposited before-end or passed along when executing the transaction.
-* *Data*, containing the encoded function selector and parameters of the call. This can be produced using a number of tools. For example, a maintenance operation granting role `ROLE` to `ACCOUNT` can be encode using web3js as follows:
+* *Data*, containing the encoded function selector and parameters of the call. This can be produced using a number of tools. For example, a maintenance operation granting role `ROLE` to `ACCOUNT` can be encoded using web3js as follows:
 
 ```javascript
 const data = timelock.contract.methods.grantRole(ROLE, ACCOUNT).encodeABI()
@@ -145,7 +153,7 @@ Operations status can be queried using the functions:
 [[timelock-admin]]
 ===== Admin
 
-The admins are in charge of managing proposers and executors. For the timelock to be self-governed, this role should only be given to the timelock itself. Upon deployment, both the timelock and the deployer have this role. After further configuration and testing, the deployer can renounce this role such that all further maintenance operations have to go through the timelock process.
+The admins are in charge of managing proposers and executors. For the timelock to be self-governed, this role should only be given to the timelock itself. Upon deployment, the admin role can be granted to any address (in addition to the timelock itself). After further configuration and testing, this optional admin should renounce its role such that all further maintenance operations have to go through the timelock process.
 
 This role is identified by the *TIMELOCK_ADMIN_ROLE* value: `0x5f58e3a2316349923ce3780f8d587db2d72378aed66a8261c916544fa6846ca5`
 

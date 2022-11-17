@@ -1,5 +1,4 @@
-const { BN } = require('@openzeppelin/test-helpers');
-const { NeonERC1820Registry } = require('../../../helpers/eip1820')
+const { BN, singletons } = require('@openzeppelin/test-helpers');
 
 const { expect } = require('chai');
 
@@ -15,7 +14,7 @@ contract('ERC777PresetFixedSupply', function (accounts) {
   const defaultOperators = [defaultOperatorA, defaultOperatorB];
 
   before(async function () {
-    await NeonERC1820Registry(registryFunder);
+    await singletons.ERC1820Registry(registryFunder);
   });
 
   beforeEach(async function () {

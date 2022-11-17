@@ -15,7 +15,7 @@ contract GovernorMock is
 {
     constructor(
         string memory name_,
-        ERC20Votes token_,
+        IVotes token_,
         uint256 votingDelay_,
         uint256 votingPeriod_,
         uint256 quorumNumerator_
@@ -35,16 +35,6 @@ contract GovernorMock is
         return _cancel(targets, values, calldatas, salt);
     }
 
-    function getVotes(address account, uint256 blockNumber)
-        public
-        view
-        virtual
-        override(IGovernor, GovernorVotes)
-        returns (uint256)
-    {
-        return super.getVotes(account, blockNumber);
-    }
-
     function proposalThreshold() public view override(Governor, GovernorSettings) returns (uint256) {
         return super.proposalThreshold();
     }
@@ -54,7 +44,7 @@ contract GovernorMock is
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public virtual override(Governor, GovernorProposalThreshold) returns (uint256) {
+    ) public override(Governor, GovernorProposalThreshold) returns (uint256) {
         return super.propose(targets, values, calldatas, description);
     }
 }
