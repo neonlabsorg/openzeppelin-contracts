@@ -6,19 +6,18 @@
 // - COMPILE_VERSION:   compiler version (default: 0.8.9)
 // - COINMARKETCAP:     coinmarkercat api key for USD value in gas report
 
-
 const getStringValue = (input) => {
   return input === undefined ? '' : input;
 };
 
 const getArrayValue = (input) => {
-  return input === undefined ? [] : String(input).split(',')
+  return input === undefined ? [] : String(input).split(',');
 };
 
 const Config = {
   privateKeys: getArrayValue(process.env.PRIVATE_KEYS),
   networkId: getStringValue(process.env.NETWORK_ID),
-  proxyUrl: getStringValue(process.env.PROXY_URL)
+  proxyUrl: getStringValue(process.env.PROXY_URL),
 };
 
 const fs = require('fs');
@@ -44,7 +43,7 @@ const argv = require('yargs/yargs')()
     mode: {
       alias: 'compileMode',
       type: 'string',
-      choices: [ 'production', 'development' ],
+      choices: ['production', 'development'],
       default: 'development',
     },
     ir: {
@@ -61,8 +60,7 @@ const argv = require('yargs/yargs')()
       alias: 'coinmarketcapApiKey',
       type: 'string',
     },
-  })
-  .argv;
+  }).argv;
 
 require('@nomiclabs/hardhat-truffle5');
 require('hardhat-ignore-warnings');
@@ -99,12 +97,12 @@ module.exports = {
       url: Config.proxyUrl,
       accounts: Config.privateKeys,
       network_id: parseInt(Config.networkId),
-      gas: "auto",
-      gasPrice: "auto",
+      gas: 'auto',
+      gasPrice: 'auto',
       allowUnlimitedContractSize: !withOptimizations,
       timeout: 180000,
-      isFork: true
-    }
+      isFork: true,
+    },
   },
   warnings: {
     '*': {
@@ -119,9 +117,18 @@ module.exports = {
     outputFile: argv.gasReport,
     coinmarketcap: argv.coinmarketcap,
   },
+  mocha: {
+    timeout: 600000,
+    reporter: 'mocha-multi-reporters',
+    reporterOption: {
+      reporterEnabled: 'spec, allure-mocha',
+      allureMochaReporterOptions: {
+        resultsDir: '../../allure-results',
+      },
+    },
+  },
   docgen: require('./docs/config'),
 };
-
 if (argv.coverage) {
   require('solidity-coverage');
   module.exports.networks.hardhat.initialBaseFeePerGas = 0;
