@@ -54,7 +54,7 @@ const getStringValue = (input) => {
       compiler: {
         alias: 'compileVersion',
         type: 'string',
-        default: '0.5.7',
+        default: '0.5.10',
       },
       coinmarketcap: {
         alias: 'coinmarketcapApiKey',
