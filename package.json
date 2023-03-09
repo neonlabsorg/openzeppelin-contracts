@@ -1,7 +1,7 @@
 {
   "name": "openzeppelin-solidity",
   "description": "Secure Smart Contract library for Solidity",
-  "version": "3.4.2-solc-0.7",
+  "version": "3.4.2",
   "files": [
     "/contracts/**/*.sol",
     "/build/contracts/*.json",
@@ -9,8 +9,8 @@
     "/test/behaviors"
   ],
   "scripts": {
-    "compile": "buidler compile",
-    "coverage": "buidler coverage",
+    "compile": "hardhat  compile",
+    "coverage": "env COVERAGE=true hardhat coverage",
     "docs": "oz-docs",
     "docs:watch": "npm run docs watch contracts 'docs/*.hbs'",
     "prepare-docs": "scripts/prepare-docs.sh",
@@ -24,7 +24,7 @@
     "prepack": "scripts/prepack.sh",
     "release": "scripts/release/release.sh",
     "version": "scripts/release/version.sh",
-    "test": "buidler test"
+    "test": "hardhat test"
   },
   "repository": {
     "type": "git",
@@ -45,9 +45,9 @@
   },
   "homepage": "https://openzeppelin.com/contracts/",
   "devDependencies": {
-    "@nomiclabs/buidler": "^1.4.8",
-    "@nomiclabs/buidler-truffle5": "^1.3.4",
-    "@nomiclabs/buidler-web3": "^1.3.4",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.3",
+    "@nomiclabs/hardhat-truffle5": "^2.0.5",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/docs-utils": "^0.1.0",
     "@openzeppelin/gsn-helpers": "^0.2.3",
     "@openzeppelin/gsn-provider": "^0.1.10",
@@ -69,9 +69,15 @@
     "mocha": "^8.0.1",
     "rimraf": "^3.0.2",
     "solhint": "^3.2.0",
-    "solidity-coverage": "^0.7.11",
-    "solidity-docgen": "^0.5.3",
-    "web3": "^1.3.0"
+    "solidity-coverage": "^0.8.0",
+    "solidity-docgen": "^0.6.0-beta.29",
+    "web3": "^1.3.0",
+    "hardhat-gas-reporter": "^1.0.4",
+    "hardhat-ignore-warnings": "^0.2.0",
+    "solidity-ast": "^0.4.25"
   },
-  "dependencies": {}
+  "dependencies": {
+    "allure-mocha": "^2.0.0-beta.15",
+    "mocha-multi-reporters": "^1.5.1"
+  }
 }
