@@ -19,10 +19,12 @@
     "lint:js": "eslint .",
     "lint:js:fix": "eslint . --fix",
     "lint:sol": "solhint --max-warnings 0 \"contracts/**/*.sol\"",
-    "prepare": "npm run compile",
+    "clean": "hardhat clean && rimraf build contracts/build",
+    "prepare": "",
+    "prepack": "node ./scripts/move-compiled-contracts.js",
     "release": "scripts/release/release.sh",
     "version": "scripts/release/version.sh",
-    "test": "hardhat test"
+    "test": "npm run prepack && hardhat test"
   },
   "repository": {
     "type": "git",
@@ -46,8 +48,11 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.3",
     "@nomiclabs/hardhat-truffle5": "^2.0.5",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@openzeppelin/gsn-helpers": "^0.1.5",
-    "@openzeppelin/gsn-provider": "^0.1.4",
+    "@openzeppelin/docs-utils": "^0.1.0",
+    "@openzeppelin/gsn-helpers": "^0.2.3",
+    "@openzeppelin/gsn-provider": "^0.1.10",
+    "@openzeppelin/test-environment": "^0.1.9",
+    "@openzeppelin/test-helpers": "^0.5.9",
     "chai": "^4.2.0",
     "concurrently": "^4.1.0",
     "eslint": "^4.19.1",
