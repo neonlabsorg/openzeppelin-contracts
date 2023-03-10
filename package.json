@@ -10,7 +10,7 @@
     "/test/behaviors"
   ],
   "scripts": {
-    "compile": "hardhat compile",
+    "compile": "hardhat compile && npm run prepack",
     "coverage": "env COVERAGE=true hardhat coverage",
     "docs": "scripts/docs.sh",
     "prepare-docs": "scripts/prepare-docs.sh",
