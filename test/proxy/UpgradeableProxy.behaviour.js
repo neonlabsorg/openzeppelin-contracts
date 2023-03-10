@@ -8,6 +8,7 @@ const DummyImplementation = artifacts.require('DummyImplementation');
 const IMPLEMENTATION_LABEL = 'eip1967.proxy.implementation';
 
 function toChecksumAddress (address) {
+  address = address.replace(/^0+/, '');
   return ethereumjsUtil.toChecksumAddress('0x' + address.replace(/^0x/, '').padStart(40, '0'));
 }
 

@@ -20,6 +20,7 @@ const IMPLEMENTATION_LABEL = 'eip1967.proxy.implementation';
 const ADMIN_LABEL = 'eip1967.proxy.admin';
 
 function toChecksumAddress (address) {
+  address = address.replace(/^0+/, '');
   return ethereumjsUtil.toChecksumAddress('0x' + address.replace(/^0x/, '').padStart(40, '0'));
 }
 

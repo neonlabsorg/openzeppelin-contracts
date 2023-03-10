@@ -12,6 +12,7 @@ const BadBeaconNoImpl = artifacts.require('BadBeaconNoImpl');
 const BadBeaconNotContract = artifacts.require('BadBeaconNotContract');
 
 function toChecksumAddress (address) {
+  address = address.replace(/^0+/, '');
   return ethereumjsUtil.toChecksumAddress('0x' + address.replace(/^0x/, '').padStart(40, '0'));
 }
 
