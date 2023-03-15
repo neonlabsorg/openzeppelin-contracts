@@ -5,6 +5,7 @@ const { expect } = require('chai');
 const Create2Impl = artifacts.require('Create2Impl');
 const ERC20Mock = artifacts.require('ERC20Mock');
 const ERC1820Implementer = artifacts.require('ERC1820Implementer');
+require('web3');
 
 contract('Create2', function (accounts) {
   const [deployerAccount] = accounts;
@@ -59,7 +60,8 @@ contract('Create2', function (accounts) {
 
     it('deploys a contract with funds deposited in the factory', async function () {
       const deposit = ether('2');
-      await send.ether(deployerAccount, this.factory.address, deposit);
+      await web3.eth.sendTransaction({ from:deployerAccount,  to:this.factory.address, value:deposit });
+      //await send.ether(deployerAccount, this.factory.address, deposit);
       expect(await balance.current(this.factory.address)).to.be.bignumber.equal(deposit);
 
       const onChainComputed = await this.factory

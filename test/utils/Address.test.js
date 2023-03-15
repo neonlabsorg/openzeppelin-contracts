@@ -4,10 +4,11 @@ const { expect } = require('chai');
 const AddressImpl = artifacts.require('AddressImpl');
 const EtherReceiver = artifacts.require('EtherReceiverMock');
 const CallReceiverMock = artifacts.require('CallReceiverMock');
+require('web3');
 
 contract('Address', function (accounts) {
   const [ recipient, other ] = accounts;
-
+ 
   beforeEach(async function () {
     this.mock = await AddressImpl.new();
   });
@@ -43,7 +44,8 @@ contract('Address', function (accounts) {
     context('when sender contract has funds', function () {
       const funds = ether('1');
       beforeEach(async function () {
-        await send.ether(other, this.mock.address, funds);
+        await web3.eth.sendTransaction({ from:other,  to:this.mock.address, value:funds });
+        //await send.ether(other, this.mock.address, funds);
       });
 
       it('sends 0 wei', async function () {
@@ -233,7 +235,8 @@ contract('Address', function (accounts) {
 
         const tracker = await balance.tracker(this.contractRecipient.address);
 
-        await send.ether(other, this.mock.address, amount);
+        //await send.ether(other, this.mock.address, amount);
+        await web3.eth.sendTransaction({ from:other,  to:this.mock.address, value:amount });
         const receipt = await this.mock.functionCallWithValue(this.contractRecipient.address, abiEncodedCall, amount);
 
         expect(await tracker.delta()).to.be.bignumber.equal(amount);
@@ -268,8 +271,9 @@ contract('Address', function (accounts) {
           type: 'function',
           inputs: [],
         }, []);
-
-        await send.ether(other, this.mock.address, amount);
+        let to = this.mock.address;
+        await web3.eth.sendTransaction({ from:other,  to:to, value:amount });
+       // await send.ether(other, this.mock.address, amount);
         await expectRevert(
           this.mock.functionCallWithValue(this.contractRecipient.address, abiEncodedCall, amount),
           'Address: low-level call with value failed',

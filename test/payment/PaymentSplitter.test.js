@@ -2,6 +2,7 @@ const { balance, constants, ether, expectEvent, send, expectRevert } = require('
 const { ZERO_ADDRESS } = constants;
 
 const { expect } = require('chai');
+require('web3');
 
 const PaymentSplitter = artifacts.require('PaymentSplitter');
 
@@ -64,8 +65,8 @@ contract('PaymentSplitter', function (accounts) {
     });
 
     it('accepts payments', async function () {
-      await send.ether(owner, this.contract.address, amount);
-
+      //await send.ether(owner, this.contract.address, amount);
+      await web3.eth.sendTransaction({ from:owner,  to:this.contract.address, value:amount });
       expect(await balance.current(this.contract.address)).to.be.bignumber.equal(amount);
     });
 
@@ -86,7 +87,8 @@ contract('PaymentSplitter', function (accounts) {
         );
       });
       it('reverts if non-payee want to claim', async function () {
-        await send.ether(payer1, this.contract.address, amount);
+        await web3.eth.sendTransaction({ from:payer1,  to:this.contract.address, value:amount });
+        //await send.ether(payer1, this.contract.address, amount);
         await expectRevert(this.contract.release(nonpayee1),
           'PaymentSplitter: account has no shares',
         );
@@ -94,7 +96,8 @@ contract('PaymentSplitter', function (accounts) {
     });
 
     it('distributes funds to payees', async function () {
-      await send.ether(payer1, this.contract.address, amount);
+      //await send.ether(payer1, this.contract.address, amount);
+      await web3.eth.sendTransaction({ from:payer1,  to:this.contract.address, value:amount });
 
       // receive funds
       const initBalance = await balance.current(this.contract.address);
