@@ -18,8 +18,8 @@ contract('TimersBlockNumber', function () {
   });
 
   it('pending', async function () {
-    await this.instance.setDeadline(this.now + 3);
-    expect(await this.instance.getDeadline()).to.be.bignumber.equal(new BN(this.now + 3));
+    await this.instance.setDeadline(this.now + 30);
+    expect(await this.instance.getDeadline()).to.be.bignumber.equal(new BN(this.now + 30));
     expect(await this.instance.isUnset()).to.be.equal(false);
     expect(await this.instance.isStarted()).to.be.equal(true);
     expect(await this.instance.isPending()).to.be.equal(true);
@@ -45,10 +45,10 @@ contract('TimersBlockNumber', function () {
   });
 
   it('fast forward', async function () {
-    await this.instance.setDeadline(this.now + 3);
+    await this.instance.setDeadline(this.now + 30);
     expect(await this.instance.isPending()).to.be.equal(true);
     expect(await this.instance.isExpired()).to.be.equal(false);
-    await time.advanceBlockTo(this.now + 3);
+    await time.advanceBlockTo(this.now + 30);
     expect(await this.instance.isPending()).to.be.equal(false);
     expect(await this.instance.isExpired()).to.be.equal(true);
   });

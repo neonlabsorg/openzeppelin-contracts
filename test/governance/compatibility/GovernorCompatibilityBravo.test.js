@@ -41,6 +41,8 @@ contract('GovernorCompatibilityBravo', function (accounts) {
   for (const { mode, Token } of TOKENS) {
     describe(`using ${Token._json.contractName}`, function () {
       beforeEach(async function () {
+        //NDEV-1483 OZ: 'Governor' contract can't be deployed: 'BPF program panicked' 
+        this.skip();
         const [deployer] = await web3.eth.getAccounts();
 
         this.token = await Token.new(tokenName, tokenSymbol, tokenName);

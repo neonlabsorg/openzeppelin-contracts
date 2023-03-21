@@ -45,6 +45,8 @@ contract('TimersTimestamp', function () {
   });
 
   it('fast forward', async function () {
+    // The test is not appropriate for neon environment (function time.increaseTo() does not work)
+    this.skip();
     await this.instance.setDeadline(this.now + 100);
     expect(await this.instance.isPending()).to.be.equal(true);
     expect(await this.instance.isExpired()).to.be.equal(false);

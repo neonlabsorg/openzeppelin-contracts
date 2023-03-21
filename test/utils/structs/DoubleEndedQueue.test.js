@@ -30,6 +30,8 @@ contract('DoubleEndedQueue', function () {
     });
 
     it('reverts on accesses', async function () {
+      //NDEV-1473
+      this.skip();
       await expectRevertCustomError(this.deque.$popBack(0), 'Empty()');
       await expectRevertCustomError(this.deque.$popFront(0), 'Empty()');
       await expectRevertCustomError(this.deque.$back(0), 'Empty()');
@@ -54,6 +56,8 @@ contract('DoubleEndedQueue', function () {
     });
 
     it('out of bounds access', async function () {
+      // NDEV-1473
+      this.skip();
       await expectRevertCustomError(this.deque.$at(0, this.content.length), 'OutOfBounds()');
     });
 

@@ -60,7 +60,7 @@ contract('ERC1820Implementer', function (accounts) {
 
     it('can be set as an implementer for supported interfaces in the registry', async function () {
       await this.registry.setInterfaceImplementer(implementee, this.interfaceA, this.implementer.address, {
-        from: implementee,
+        from: implementee, gas: 1570000
       });
 
       expect(await this.registry.getInterfaceImplementer(implementee, this.interfaceA)).to.equal(

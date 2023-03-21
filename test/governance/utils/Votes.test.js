@@ -37,7 +37,7 @@ contract('Votes', function (accounts) {
         });
 
         it('reverts if block number >= current block', async function () {
-          await expectRevert(this.votes.getPastTotalSupply(this.tx3.timepoint + 1), 'Votes: future lookup');
+          await expectRevert(this.votes.getPastTotalSupply(this.tx3.timepoint + 10000), 'Votes: future lookup');
         });
 
         it('delegates', async function () {

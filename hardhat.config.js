@@ -82,7 +82,7 @@ module.exports = {
     version: argv.compiler,
     settings: {
       optimizer: {
-        enabled: withOptimizations,
+        enabled: true,
         runs: 200,
       },
       viaIR: withOptimizations && argv.ir,

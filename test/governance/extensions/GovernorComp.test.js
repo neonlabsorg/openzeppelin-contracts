@@ -25,6 +25,8 @@ contract('GovernorComp', function (accounts) {
   for (const { mode, Token } of TOKENS) {
     describe(`using ${Token._json.contractName}`, function () {
       beforeEach(async function () {
+        //NDEV-1483 OZ: 'Governor' contract can't be deployed: 'BPF program panicked' 
+        this.skip();
         this.owner = owner;
         this.token = await Token.new(tokenName, tokenSymbol, tokenName);
         this.mock = await Governor.new(name, this.token.address);

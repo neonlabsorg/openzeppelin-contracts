@@ -256,6 +256,8 @@ function shouldBehaveLikeVotes(mode = 'blocknumber') {
 
       it('returns the latest block if >= last checkpoint block', async function () {
         const { receipt } = await this.votes.$_mint(this.account1, this.NFT0);
+        // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         const timepoint = await clockFromReceipt[mode](receipt);
         await time.advanceBlock();
         await time.advanceBlock();
@@ -334,6 +336,8 @@ function shouldBehaveLikeVotes(mode = 'blocknumber') {
         it('returns the latest block if >= last checkpoint block', async function () {
           const { receipt } = await this.votes.delegate(this.account2, { from: this.account1 });
           const timepoint = await clockFromReceipt[mode](receipt);
+           // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           await time.advanceBlock();
           await time.advanceBlock();
 

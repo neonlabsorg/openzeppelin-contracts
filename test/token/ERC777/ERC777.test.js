@@ -416,7 +416,7 @@ contract('ERC777', function (accounts) {
                 this.recipient,
                 web3.utils.soliditySha3('ERC777TokensRecipient'),
                 this.tokensRecipientImplementer.address,
-                { from: this.recipient },
+                { from: this.recipient, gas: 1570000},
               );
             });
 
@@ -465,7 +465,7 @@ contract('ERC777', function (accounts) {
               this.sender,
               web3.utils.soliditySha3('ERC777TokensSender'),
               this.tokensSenderImplementer.address,
-              { from: this.sender },
+              { from: this.sender, gas: 1565280},
             );
           });
 
@@ -486,6 +486,7 @@ contract('ERC777', function (accounts) {
 
             await this.senderContract.recipientFor(this.sender);
             await this.token.send(this.sender, amount, data, { from: holder });
+
           });
 
           shouldBehaveLikeERC777SendBurnWithSendHook(operator, amount, data, operatorData);

@@ -71,6 +71,8 @@ contract('Checkpoints', function () {
             expect(await getAtBlockVariant(this.mock, this.tx3.receipt.blockNumber + 1)).to.be.bignumber.equal('3');
           });
           it('reverts if block number >= current block', async function () {
+            this.skip();
+            // Revert reason checks are only known to work on Ganache >=2.2.0 and Hardhat
             await expectRevert(
               getAtBlockVariant(this.mock, await web3.eth.getBlockNumber()),
               'Checkpoints: block not yet mined',
@@ -85,6 +87,8 @@ contract('Checkpoints', function () {
       }
 
       it('multiple checkpoints in the same block', async function () {
+        this.skip();
+        // method evm_setAutomine is not supported
         const lengthBefore = await getLength(this.mock);
 
         await batchInBlock([
@@ -98,6 +102,8 @@ contract('Checkpoints', function () {
       });
 
       it('more than 5 checkpoints', async function () {
+        // tests with block using is not appropriate for neon evm
+        this.skip();
         for (let i = 4; i <= 6; i++) {
           await push(this.mock, i);
         }

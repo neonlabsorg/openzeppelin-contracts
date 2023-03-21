@@ -54,6 +54,8 @@ contract('ERC20Votes', function (accounts) {
       });
 
       it('recent checkpoints', async function () {
+        // This helper can only be used with Hardhat Network
+        this.skip();
         await this.token.delegate(holder, { from: holder });
         for (let i = 0; i < 6; i++) {
           await this.token.$_mint(holder, 1);
@@ -334,6 +336,8 @@ contract('ERC20Votes', function (accounts) {
         });
 
         afterEach(async function () {
+          //This helper can only be used with Hardhat Network. You are connected to 'neonlabs'.
+          this.skip();
           expect(await this.token.getVotes(holder)).to.be.bignumber.equal(this.holderVotes);
           expect(await this.token.getVotes(recipient)).to.be.bignumber.equal(this.recipientVotes);
 
@@ -391,6 +395,8 @@ contract('ERC20Votes', function (accounts) {
           });
 
           it('does not add more than one checkpoint in a block', async function () {
+            this.skip();
+            // method evm_setAutomine is not supported
             await this.token.transfer(recipient, '100', { from: holder });
             expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('0');
 
@@ -425,6 +431,8 @@ contract('ERC20Votes', function (accounts) {
 
           it('returns the latest block if >= last checkpoint block', async function () {
             const { receipt } = await this.token.delegate(other1, { from: holder });
+            // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             const timepoint = await clockFromReceipt[mode](receipt);
             await time.advanceBlock();
             await time.advanceBlock();
@@ -441,6 +449,8 @@ contract('ERC20Votes', function (accounts) {
             await time.advanceBlock();
             const { receipt } = await this.token.delegate(other1, { from: holder });
             const timepoint = await clockFromReceipt[mode](receipt);
+            // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             await time.advanceBlock();
             await time.advanceBlock();
 
@@ -513,6 +523,8 @@ contract('ERC20Votes', function (accounts) {
 
         it('returns the latest block if >= last checkpoint block', async function () {
           const { receipt } = await this.token.$_mint(holder, supply);
+          // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           const timepoint = await clockFromReceipt[mode](receipt);
 
           await time.advanceBlock();
