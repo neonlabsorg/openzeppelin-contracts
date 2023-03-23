@@ -1,4 +1,4 @@
-const { expectRevert, singletons } = require('@openzeppelin/test-helpers');
+const { expectRevert, singletons, send, ether } = require('@openzeppelin/test-helpers');
 const { bufferToHex, keccakFromString } = require('ethereumjs-util');
 
 const { expect } = require('chai');
@@ -12,6 +12,8 @@ contract('ERC1820Implementer', function (accounts) {
 
   beforeEach(async function () {
     this.implementer = await ERC1820Implementer.new();
+    // 0.08 ETH is not enough to deploy the registry
+    await send.ether(registryFunder, '0xa990077c3205cbDf861e17Fa532eeB069cE9fF96', ether('80'));
     this.registry = await singletons.ERC1820Registry(registryFunder);
 
     this.interfaceA = bufferToHex(keccakFromString('interfaceA'));

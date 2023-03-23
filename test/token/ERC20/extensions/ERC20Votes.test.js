@@ -227,6 +227,8 @@ contract('ERC20Votes', function (accounts) {
           expect(await this.token.delegates(holder)).to.be.equal(holder);
 
           const { receipt } = await this.token.delegate(holderDelegatee, { from: holder });
+          // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           const timepoint = await clockFromReceipt[mode](receipt);
 
           expectEvent(receipt, 'DelegateChanged', {

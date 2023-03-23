@@ -40,6 +40,8 @@ contract('Governor', function (accounts) {
         this.skip();
         this.chainId = await web3.eth.getChainId();
         this.token = await Token.new(tokenName, tokenSymbol, tokenName);
+
+        await new Promise((resolve) => setTimeout(resolve, 20000));
         this.mock = await Governor.new(
           name, // name
           votingDelay, // initialVotingDelay

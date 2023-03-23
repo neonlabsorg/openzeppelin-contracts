@@ -1,4 +1,4 @@
-const { BN, constants, expectEvent, expectRevert, singletons } = require('@openzeppelin/test-helpers');
+const { BN, constants, expectEvent, expectRevert, singletons, send, ether } = require('@openzeppelin/test-helpers');
 const { ZERO_ADDRESS } = constants;
 
 const { expect } = require('chai');
@@ -29,6 +29,8 @@ contract('ERC777', function (accounts) {
   const defaultOperators = [defaultOperatorA, defaultOperatorB];
 
   beforeEach(async function () {
+    // 0.08 ETH is not enough to deploy the registry
+    await send.ether(registryFunder, '0xa990077c3205cbDf861e17Fa532eeB069cE9fF96', ether('80'));
     this.erc1820 = await singletons.ERC1820Registry(registryFunder);
   });
 
@@ -524,6 +526,8 @@ contract('ERC777', function (accounts) {
 
   describe('relative order of hooks', function () {
     beforeEach(async function () {
+      // 0.08 ETH is not enough to deploy the registry
+      await send.ether(registryFunder, '0xa990077c3205cbDf861e17Fa532eeB069cE9fF96', ether('80'));
       await singletons.ERC1820Registry(registryFunder);
       this.sender = await ERC777SenderRecipientMock.new();
       await this.sender.registerRecipient(this.sender.address);

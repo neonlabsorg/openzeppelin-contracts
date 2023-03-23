@@ -412,6 +412,8 @@ contract('ERC20VotesComp', function (accounts) {
           it('returns zero if < first checkpoint block', async function () {
             await time.advanceBlock();
             const { receipt } = await this.token.delegate(other1, { from: holder });
+            // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             const timepoint = await clockFromReceipt[mode](receipt);
             await time.advanceBlock();
             await time.advanceBlock();
@@ -498,6 +500,8 @@ contract('ERC20VotesComp', function (accounts) {
         it('returns zero if < first checkpoint block', async function () {
           await time.advanceBlock();
           const { receipt } = await this.token.$_mint(holder, supply);
+          // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           const timepoint = await clockFromReceipt[mode](receipt);
           await time.advanceBlock();
           await time.advanceBlock();
