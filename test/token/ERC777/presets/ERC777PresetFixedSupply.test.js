@@ -1,4 +1,4 @@
-const { BN, singletons } = require('@openzeppelin/test-helpers');
+const { BN, singletons, send, ether } = require('@openzeppelin/test-helpers');
 
 const { expect } = require('chai');
 
@@ -14,6 +14,8 @@ contract('ERC777PresetFixedSupply', function (accounts) {
   const defaultOperators = [defaultOperatorA, defaultOperatorB];
 
   before(async function () {
+    // 0.08 ETH is not enough to deploy the registry
+    await send.ether(registryFunder, '0xa990077c3205cbDf861e17Fa532eeB069cE9fF96', ether('80'));
     await singletons.ERC1820Registry(registryFunder);
   });
 
