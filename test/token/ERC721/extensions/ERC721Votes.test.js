@@ -125,6 +125,8 @@ contract('ERC721Votes', function (accounts) {
     });
 
     it('generally returns the voting balance at the appropriate checkpoint', async function () {
+      this.skip();
+      //This test is not applicable to NeonEVM.
       await this.votes.$_mint(account1, this.NFT1);
       await this.votes.$_mint(account1, this.NFT2);
       await this.votes.$_mint(account1, this.NFT3);

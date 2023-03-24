@@ -127,7 +127,7 @@ contract('MerkleProof', function () {
     });
 
     it('revert with invalid multi proof #2', async function () {
-      // NDEV-1477 Wrong kind of exception received
+      // NDEV-1477 Wrong kind of exception received, This is not applicable to NeonEVM.
       this.skip();
       const fill = Buffer.alloc(32); // This could be anything, we are reconstructing a fake branch
       const leaves = ['a', 'b', 'c', 'd'].map(keccak256).sort(Buffer.compare);

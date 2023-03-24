@@ -151,7 +151,8 @@ contract('MinimalForwarder', function (accounts) {
       });
 
       it('bubble out of gas', async function () {
-        // NDEV-1478 wrong kind of exception received
+        // NDEV-1478 wrong kind of exception received, 
+        //This behavior is caused by the difference in gas calculation rules between NeonEVM and real Ethereum.
         this.skip();
         const receiver = await CallReceiverMock.new();
         const gasAvailable = 100000;

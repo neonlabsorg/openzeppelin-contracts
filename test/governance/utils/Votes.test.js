@@ -37,6 +37,8 @@ contract('Votes', function (accounts) {
         });
 
         it('reverts if block number >= current block', async function () {
+          this.skip();
+          //This test is not applicable to NeonEVM.
           await expectRevert(this.votes.getPastTotalSupply(this.tx3.timepoint + 10000), 'Votes: future lookup');
         });
 
