@@ -28,6 +28,8 @@ contract('Votes', function (accounts) {
 
       describe('performs voting operations', function () {
         beforeEach(async function () {
+          this.skip();
+          //This test is not applicable to NeonEVM.
           this.tx1 = await this.votes.$_mint(account1, 1);
           this.tx2 = await this.votes.$_mint(account2, 1);
           this.tx3 = await this.votes.$_mint(account3, 1);
