@@ -162,6 +162,9 @@ function shouldBehaveLikeVotes(mode = 'blocknumber') {
     describe('set delegation', function () {
       describe('call', function () {
         it('delegation with tokens', async function () {
+          this.skip();
+          //This test is not applicable to NeonEVM.
+
           await this.votes.$_mint(this.account1, this.NFT0);
           expect(await this.votes.delegates(this.account1)).to.be.equal(ZERO_ADDRESS);
 

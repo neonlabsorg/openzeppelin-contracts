@@ -295,7 +295,7 @@ contract('Address', function (accounts) {
 
       const abiEncodedCall = this.target.contract.methods.mockFunctionWritesStorage(slot, value).encodeABI();
       
-      expect(await web3.eth.getStorageAt(this.mock.address, slot)).to.be.equal(constants.ZERO_BYTES32.slice(2));
+      expect(await web3.eth.getStorageAt(this.mock.address, slot)).to.be.equal(constants.ZERO_BYTES32);
 
       expectEvent(
         await this.mock.$functionDelegateCall(this.target.address, abiEncodedCall),
@@ -303,7 +303,7 @@ contract('Address', function (accounts) {
         { ret0: web3.eth.abi.encodeParameters(['string'], ['0x1234']) },
       );
 
-      expect(await web3.eth.getStorageAt(this.mock.address, slot)).to.be.equal(value.slice(2));
+      expect(await web3.eth.getStorageAt(this.mock.address, slot)).to.be.equal(value);
     });
 
     it('bubbles up revert reason', async function () {
