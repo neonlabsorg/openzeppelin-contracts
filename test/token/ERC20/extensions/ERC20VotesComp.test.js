@@ -56,6 +56,8 @@ contract('ERC20VotesComp', function (accounts) {
       describe('set delegation', function () {
         describe('call', function () {
           it('delegation with balance', async function () {
+            // This helper can only be used with Hardhat Network
+            this.skip();
             await this.token.$_mint(holder, supply);
             expect(await this.token.delegates(holder)).to.be.equal(ZERO_ADDRESS);
 
