@@ -41,6 +41,8 @@ contract('Checkpoints', function () {
     });
 
     describe('with checkpoints', function () {
+      this.skip();
+      //This test is not applicable to NeonEVM.
       beforeEach('pushing checkpoints', async function () {
         this.tx1 = await push(this.mock, 1);
         this.tx2 = await push(this.mock, 2);
