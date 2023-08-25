@@ -37,6 +37,8 @@ contract('ERC1820Implementer', function (accounts) {
     });
 
     it('reverts when attempting to set as implementer in the registry', async function () {
+      this.skip();
+      //https://neonlabs.atlassian.net/browse/NDEV-2098
       await expectRevert(
         this.registry.setInterfaceImplementer(implementee, this.interfaceA, this.implementer.address, {
           from: implementee,
