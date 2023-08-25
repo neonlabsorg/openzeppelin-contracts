@@ -1,4 +1,5 @@
 const { expectRevert, singletons, send, ether } = require('@openzeppelin/test-helpers');
+const { setSingletonsConfig, getSingletonsConfig } = require('@openzeppelin/test-helpers/src/config/singletons');
 const { bufferToHex, keccakFromString } = require('ethereumjs-util');
 
 const { expect } = require('chai');
@@ -11,6 +12,14 @@ contract('ERC1820Implementer', function (accounts) {
   const ERC1820_ACCEPT_MAGIC = bufferToHex(keccakFromString('ERC1820_ACCEPT_MAGIC'));
 
   beforeEach(async function () {
+    const config = getSingletonsConfig();
+
+    setSingletonsConfig({
+      abstraction: config.abstraction,
+      defaultGas: null,
+      defaultSender: config.defaultSender,
+    });
+    
     this.implementer = await ERC1820Implementer.new();
     // 0.08 ETH is not enough to deploy the registry
     await send.ether(registryFunder, '0xa990077c3205cbDf861e17Fa532eeB069cE9fF96', ether('80'));
