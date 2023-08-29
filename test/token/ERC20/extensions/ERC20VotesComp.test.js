@@ -35,6 +35,10 @@ contract('ERC20VotesComp', function (accounts) {
   for (const [mode, artifact] of Object.entries(MODES)) {
     describe(`vote with ${mode}`, function () {
       beforeEach(async function () {
+        if (mode == 'blocknumber') {
+          // This helper can only be used with Hardhat Network
+          this.skip();
+        }
         this.token = await artifact.new(name, symbol, name);
       });
 
