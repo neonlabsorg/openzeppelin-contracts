@@ -46,10 +46,14 @@ contract('Time', function () {
 
   describe('clocks', function () {
     it('timestamp', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       expect(await this.mock.$timestamp()).to.be.bignumber.equal(web3.utils.toBN(await clock.timestamp()));
     });
 
     it('block number', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       expect(await this.mock.$blockNumber()).to.be.bignumber.equal(web3.utils.toBN(await clock.blocknumber()));
     });
   });
@@ -88,6 +92,8 @@ contract('Time', function () {
     });
 
     it('get & getFull', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       const timepoint = await clock.timestamp().then(BigInt);
       const valueBefore = 24194n;
       const valueAfter = 4214143n;
@@ -107,6 +113,8 @@ contract('Time', function () {
     });
 
     it('withUpdate', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       const timepoint = await clock.timestamp().then(BigInt);
       const valueBefore = 24194n;
       const valueAfter = 4214143n;

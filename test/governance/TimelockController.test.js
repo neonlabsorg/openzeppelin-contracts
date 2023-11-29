@@ -320,6 +320,8 @@ contract('TimelockController', function (accounts) {
 
           describe('on time', function () {
             beforeEach(async function () {
+              this.skip();
+              //This helper can only be used with Hardhat Network
               const timestamp = await this.mock.getTimestamp(this.operation.id);
               await time.increaseTo(timestamp);
             });
@@ -937,6 +939,8 @@ contract('TimelockController', function (accounts) {
 
   describe('dependency', function () {
     beforeEach(async function () {
+      this.skip();
+      // this helper can only be used with Hardhat Network
       this.operation1 = genOperation(
         '0xdE66bD4c97304200A95aE0AadA32d6d01A867E39',
         0,
@@ -1099,6 +1103,8 @@ contract('TimelockController', function (accounts) {
     });
 
     it('call out of gas', async function () {
+      this.skip();
+      // this helper can only be used with Hardhat Network
       const operation = genOperation(
         this.callreceivermock.address,
         0,
