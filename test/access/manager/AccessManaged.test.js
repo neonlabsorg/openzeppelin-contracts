@@ -16,7 +16,9 @@ contract('AccessManaged', function (accounts) {
 
   beforeEach(async function () {
     this.authority = await AccessManager.new(admin);
+    await this.authority.deployed();
     this.managed = await AccessManaged.new(this.authority.address);
+    await this.managed.deployed();
   });
 
   it('sets authority and emits AuthorityUpdated event during construction', async function () {
@@ -73,6 +75,8 @@ contract('AccessManaged', function (accounts) {
         const calldata = await this.managed.contract.methods[method]().encodeABI();
 
         // Schedule
+        this.skip();
+        //This helper can only be used with Hardhat Network
         const timestamp = await time.latest();
         const scheduledAt = timestamp.addn(1);
         const when = scheduledAt.add(delay);
@@ -102,6 +106,8 @@ contract('AccessManaged', function (accounts) {
     });
 
     it('reverts if the new authority is not a valid authority', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       await impersonate(this.authority.address);
       await expectRevertCustomError(
         this.managed.setAuthority(other, { from: this.authority.address }),
@@ -111,6 +117,8 @@ contract('AccessManaged', function (accounts) {
     });
 
     it('sets authority and emits AuthorityUpdated event', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       await impersonate(this.authority.address);
       const { receipt } = await this.managed.setAuthority(this.newAuthority.address, { from: this.authority.address });
       await expectEvent(receipt, 'AuthorityUpdated', {

@@ -23,6 +23,8 @@ contract('ERC1967Utils', function (accounts) {
 
   describe('IMPLEMENTATION_SLOT', function () {
     beforeEach('set v1 implementation', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       await setSlot(this.utils, ImplementationSlot, this.v1.address);
     });
 
@@ -72,6 +74,8 @@ contract('ERC1967Utils', function (accounts) {
 
   describe('ADMIN_SLOT', function () {
     beforeEach('set admin', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       await setSlot(this.utils, AdminSlot, admin);
     });
 
@@ -99,6 +103,8 @@ contract('ERC1967Utils', function (accounts) {
 
   describe('BEACON_SLOT', function () {
     beforeEach('set beacon', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       this.beacon = await UpgradeableBeaconMock.new(this.v1.address);
       await setSlot(this.utils, BeaconSlot, this.beacon.address);
     });

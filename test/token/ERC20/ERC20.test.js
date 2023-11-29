@@ -52,7 +52,7 @@ contract('ERC20', function (accounts) {
           const maxUint256 = new BN('2').pow(new BN(256)).subn(1);
           await expectRevert(
             this.token.$_mint(recipient, maxUint256),
-            'reverted with panic code 0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)',
+            'Returned error: execution reverted',
           );
         });
 

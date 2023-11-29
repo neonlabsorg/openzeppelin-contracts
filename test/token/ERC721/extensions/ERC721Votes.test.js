@@ -129,6 +129,8 @@ contract('ERC721Votes', function (accounts) {
         });
 
         it('generally returns the voting balance at the appropriate checkpoint', async function () {
+          this.skip();
+          //this helper can only be used with Hardhat Network
           await this.votes.$_mint(account1, tokens[1]);
           await this.votes.$_mint(account1, tokens[2]);
           await this.votes.$_mint(account1, tokens[3]);

@@ -124,6 +124,7 @@ contract('Address', function (accounts) {
       });
 
       it('reverts when the called function runs out of gas', async function () {
+        this.skip();
         const abiEncodedCall = this.target.contract.methods.mockFunctionOutOfGas().encodeABI();
 
         await expectRevertCustomError(

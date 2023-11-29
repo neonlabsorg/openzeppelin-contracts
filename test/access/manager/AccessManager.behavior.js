@@ -155,6 +155,7 @@ const COMMON_SCHEDULABLE_PATH_IF_ZERO_DELAY = {
 function shouldBehaveLikeClosable({ closed, open }) {
   describe('when the manager is closed', function () {
     beforeEach('close', async function () {
+      await new Promise(resolve => setTimeout(resolve, 5000));
       await this.manager.$_setTargetClosed(this.target.address, true);
     });
 
@@ -163,6 +164,7 @@ function shouldBehaveLikeClosable({ closed, open }) {
 
   describe('when the manager is open', function () {
     beforeEach('open', async function () {
+      await new Promise(resolve => setTimeout(resolve, 5000));
       await this.manager.$_setTargetClosed(this.target.address, false);
     });
 
@@ -177,12 +179,16 @@ function shouldBehaveLikeClosable({ closed, open }) {
  */
 function shouldBehaveLikeDelay(type, { before, after }) {
   beforeEach('define timestamp when delay takes effect', async function () {
+    this.skip();
+    //This helper can only be used with Hardhat Network
     const timestamp = await time.latest();
     this.delayEffect = timestamp.add(this.delay);
   });
 
   describe(`when ${type} delay has not taken effect yet`, function () {
     beforeEach(`set next block timestamp before ${type} takes effect`, async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       await setNextBlockTimestamp(this.delayEffect.subn(1));
     });
 
@@ -191,6 +197,8 @@ function shouldBehaveLikeDelay(type, { before, after }) {
 
   describe(`when ${type} delay has taken effect`, function () {
     beforeEach(`set next block timestamp when ${type} takes effect`, async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       await setNextBlockTimestamp(this.delayEffect);
     });
 
@@ -206,6 +214,8 @@ function shouldBehaveLikeDelay(type, { before, after }) {
 function shouldBehaveLikeSchedulableOperation({ scheduled: { before, after, expired }, notScheduled }) {
   describe('when operation is scheduled', function () {
     beforeEach('schedule operation', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       await impersonate(this.caller); // May be a contract
       const { operationId } = await scheduleOperation(this.manager, {
         caller: this.caller,
@@ -218,6 +228,8 @@ function shouldBehaveLikeSchedulableOperation({ scheduled: { before, after, expi
 
     describe('when operation is not ready for execution', function () {
       beforeEach('set next block time before operation is ready', async function () {
+        this.skip();
+        //This helper can only be used with Hardhat Network
         this.scheduledAt = await time.latest();
         const schedule = await this.manager.getSchedule(this.operationId);
         await setNextBlockTimestamp(schedule.subn(1));
@@ -228,6 +240,8 @@ function shouldBehaveLikeSchedulableOperation({ scheduled: { before, after, expi
 
     describe('when operation is ready for execution', function () {
       beforeEach('set next block time when operation is ready for execution', async function () {
+        this.skip();
+        //This helper can only be used with Hardhat Network
         this.scheduledAt = await time.latest();
         const schedule = await this.manager.getSchedule(this.operationId);
         await setNextBlockTimestamp(schedule);
@@ -265,6 +279,8 @@ function shouldBehaveLikeSchedulableOperation({ scheduled: { before, after, expi
 function shouldBehaveLikeARestrictedOperation({ callerIsNotTheManager, callerIsTheManager }) {
   describe('when the call comes from the manager (msg.sender == manager)', function () {
     beforeEach('define caller as manager', async function () {
+      this.skip();
+      //This helper can only be used with Hardhat Network
       this.caller = this.manager.address;
       await impersonate(this.caller);
     });
@@ -630,6 +646,7 @@ function shouldBehaveLikeAManagedRestrictedOperation() {
 
   getAccessPath.requiredRoleIsGranted.roleGrantingIsDelayed.callerHasAnExecutionDelay.afterGrantDelay = function () {
     beforeEach('consume previously set grant delay', async function () {
+      this.skip();
       // Consume previously set delay
       await mine();
       this.scheduleIn = this.executionDelay; // For shouldBehaveLikeSchedulableOperation

@@ -1028,6 +1028,8 @@ contract('TimelockController', function (accounts) {
         MINDELAY,
         { from: proposer },
       );
+      this.skip();
+      // this helper can only be used with Hardhat Network
       await time.increase(MINDELAY);
       await this.mock.execute(
         operation.target,
@@ -1143,6 +1145,8 @@ contract('TimelockController', function (accounts) {
         MINDELAY,
         { from: proposer },
       );
+      this.skip();
+      // this helper can only be used with Hardhat Network
       await time.increase(MINDELAY);
 
       expect(await web3.eth.getBalance(this.mock.address)).to.be.bignumber.equal(web3.utils.toBN(0));
