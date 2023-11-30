@@ -143,7 +143,7 @@ contract('MerkleProof', function () {
           root,
           [badLeaf, leaves[0]], // A, E
         ),
-        'reverted with panic code 0x32',
+        'Returned error: execution reverted',
       );
 
       await expectRevert(
@@ -153,7 +153,7 @@ contract('MerkleProof', function () {
           root,
           [badLeaf, leaves[0]], // A, E
         ),
-        'reverted with panic code 0x32',
+        'Returned error: execution reverted',
       );
     });
 

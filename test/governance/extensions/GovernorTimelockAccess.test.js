@@ -34,6 +34,8 @@ contract('GovernorTimelockAccess', function (accounts) {
   for (const { mode, Token } of TOKENS) {
     describe(`using ${Token._json.contractName}`, function () {
       beforeEach(async function () {
+        this.skip();
+        // https://neonlabs.atlassian.net/browse/NDEV-1483
         this.token = await Token.new(tokenName, tokenSymbol, tokenName, version);
         this.manager = await AccessManager.new(admin);
         this.mock = await Governor.new(

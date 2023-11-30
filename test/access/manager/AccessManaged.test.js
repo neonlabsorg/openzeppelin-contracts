@@ -16,9 +16,7 @@ contract('AccessManaged', function (accounts) {
 
   beforeEach(async function () {
     this.authority = await AccessManager.new(admin);
-    await this.authority.deployed();
     this.managed = await AccessManaged.new(this.authority.address);
-    await this.managed.deployed();
   });
 
   it('sets authority and emits AuthorityUpdated event during construction', async function () {

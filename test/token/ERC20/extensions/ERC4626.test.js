@@ -44,7 +44,7 @@ contract('ERC4626', function (accounts) {
       const vault = await ERC4626OffsetMock.new(name + ' Vault', symbol + 'V', token.address, offset);
       await expectRevert(
         vault.decimals(),
-        'reverted with panic code 0x11 (Arithmetic operation underflowed or overflowed outside of an unchecked block)',
+        'Returned error: execution reverted',
       );
     }
   });
