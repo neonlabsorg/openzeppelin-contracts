@@ -113,6 +113,7 @@ contract('ERC721Votes', function (accounts) {
         });
 
         it('returns the same total supply on transfers', async function () {
+          //this helper can only be used with Hardhat Network
           await this.votes.delegate(account1, { from: account1 });
 
           const { receipt } = await this.votes.transferFrom(account1, account2, tokens[0], { from: account1 });

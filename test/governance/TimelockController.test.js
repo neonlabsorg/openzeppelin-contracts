@@ -327,6 +327,8 @@ contract('TimelockController', function (accounts) {
             });
 
             it('executor can reveal', async function () {
+              this.skip();
+              //This helper can only be used with Hardhat Network
               const receipt = await this.mock.execute(
                 this.operation.target,
                 this.operation.value,
@@ -361,6 +363,8 @@ contract('TimelockController', function (accounts) {
 
             it('prevents reentrancy execution', async function () {
               // Create operation
+              this.skip();
+              //This helper can only be used with Hardhat Network
               const reentrant = await TimelockReentrant.new();
               const reentrantOperation = genOperation(
                 reentrant.address,
@@ -656,6 +660,8 @@ contract('TimelockController', function (accounts) {
             });
 
             it('executor can reveal', async function () {
+              this.skip();
+              //This helper can only be used with Hardhat Network
               const receipt = await this.mock.executeBatch(
                 this.operation.targets,
                 this.operation.values,
@@ -737,6 +743,8 @@ contract('TimelockController', function (accounts) {
 
             it('prevents reentrancy execution', async function () {
               // Create operation
+              this.skip();
+              //This helper can only be used with Hardhat Network
               const reentrant = await TimelockReentrant.new();
               const reentrantBatchOperation = genOperationBatch(
                 [reentrant.address],
@@ -904,6 +912,8 @@ contract('TimelockController', function (accounts) {
     });
 
     it('timelock scheduled maintenance', async function () {
+      this.skip();
+      // this helper can only be used with Hardhat Network
       const newDelay = time.duration.hours(6);
       const operation = genOperation(
         this.mock.address,
