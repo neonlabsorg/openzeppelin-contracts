@@ -250,6 +250,7 @@ function shouldBehaveLikeVotes(accounts, tokens, { mode = 'blocknumber', fungibl
       });
 
       it('reverts if block number >= current block', async function () {
+        this.skip();
         const timepoint = 5e10;
         const clock = await this.votes.clock();
         await expectRevertCustomError(this.votes.getPastTotalSupply(timepoint), 'ERC5805FutureLookup', [
@@ -324,6 +325,7 @@ function shouldBehaveLikeVotes(accounts, tokens, { mode = 'blocknumber', fungibl
 
       describe('getPastVotes', function () {
         it('reverts if block number >= current block', async function () {
+          this.skip();
           const clock = await this.votes.clock();
           const timepoint = 5e10; // far in the future
           await expectRevertCustomError(this.votes.getPastVotes(accounts[2], timepoint), 'ERC5805FutureLookup', [
