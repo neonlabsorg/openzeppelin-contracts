@@ -1019,21 +1019,6 @@ contract('AccessManager', function (accounts) {
           describe('when the delay difference is shorter than minimum setback', function () {
             const newDelay = oldDelay.subn(1);
 
-            it('increases the delay after minsetback', async function () {
-              this.skip();
-              //This helper can only be used with Hardhat Network
-              const { receipt } = await this.manager.setGrantDelay(this.role.id, newDelay, { from: admin });
-              const timestamp = await clockFromReceipt.timestamp(receipt).then(web3.utils.toBN);
-              expectEvent(receipt, 'RoleGrantDelayChanged', {
-                roleId: this.role.id,
-                delay: newDelay,
-                since: timestamp.add(MINSETBACK),
-              });
-
-              expect(await this.manager.getRoleGrantDelay(this.role.id)).to.be.bignumber.equal(oldDelay);
-              await time.increase(MINSETBACK);
-              expect(await this.manager.getRoleGrantDelay(this.role.id)).to.be.bignumber.equal(newDelay);
-            });
           });
 
           describe('when the delay difference is longer than minimum setback', function () {
@@ -1085,21 +1070,6 @@ contract('AccessManager', function (accounts) {
             expect(await this.manager.getTargetAdminDelay(target)).to.be.bignumber.equal(oldDelay);
           });
 
-          it('increases the delay after minsetback', async function () {
-            this.skip();
-            //This helper can only be used with Hardhat Network
-            const { receipt } = await this.manager.setTargetAdminDelay(target, newDelay, { from: admin });
-            const timestamp = await clockFromReceipt.timestamp(receipt).then(web3.utils.toBN);
-            expectEvent(receipt, 'TargetAdminDelayUpdated', {
-              target,
-              delay: newDelay,
-              since: timestamp.add(MINSETBACK),
-            });
-
-            expect(await this.manager.getTargetAdminDelay(target)).to.be.bignumber.equal(oldDelay);
-            await time.increase(MINSETBACK);
-            expect(await this.manager.getTargetAdminDelay(target)).to.be.bignumber.equal(newDelay);
-          });
         });
 
         describe('when reducing the delay', function () {
@@ -2099,185 +2069,6 @@ contract('AccessManager', function (accounts) {
       });
     });
 
-    it('schedules an operation at the specified execution date if it is larger than caller execution delay', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const { operationId, scheduledAt, receipt } = await scheduleOperation(this.manager, {
-        caller: this.caller,
-        target: this.target.address,
-        calldata: this.calldata,
-        delay: this.delay,
-      });
-
-      expect(await this.manager.getSchedule(operationId)).to.be.bignumber.equal(scheduledAt.add(this.delay));
-      expectEvent(receipt, 'OperationScheduled', {
-        operationId,
-        nonce: '1',
-        schedule: scheduledAt.add(this.delay),
-        target: this.target.address,
-        data: this.calldata,
-      });
-    });
-
-    it('schedules an operation at the minimum execution date if no specified execution date (when == 0)', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const executionDelay = await time.duration.hours(72);
-      await this.manager.$_grantRole(this.role.id, this.caller, 0, executionDelay);
-
-      const timestamp = await time.latest();
-      const scheduledAt = timestamp.addn(1);
-      await setNextBlockTimestamp(scheduledAt);
-      const { receipt } = await this.manager.schedule(this.target.address, this.calldata, 0, {
-        from: this.caller,
-      });
-
-      const operationId = await this.manager.hashOperation(this.caller, this.target.address, this.calldata);
-
-      expect(await this.manager.getSchedule(operationId)).to.be.bignumber.equal(scheduledAt.add(executionDelay));
-      expectEvent(receipt, 'OperationScheduled', {
-        operationId,
-        nonce: '1',
-        schedule: scheduledAt.add(executionDelay),
-        target: this.target.address,
-        data: this.calldata,
-      });
-    });
-
-    it('increases the nonce of an operation scheduled more than once', async function () {
-      // Setup and check initial nonce
-      const expectedOperationId = await web3.utils.keccak256(
-        web3.eth.abi.encodeParameters(
-          ['address', 'address', 'bytes'],
-          [this.caller, this.target.address, this.calldata],
-        ),
-      );
-      expect(await this.manager.getNonce(expectedOperationId)).to.be.bignumber.eq('0');
-
-      // Schedule
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const op1 = await scheduleOperation(this.manager, {
-        caller: this.caller,
-        target: this.target.address,
-        calldata: this.calldata,
-        delay: this.delay,
-      });
-      expectEvent(op1.receipt, 'OperationScheduled', {
-        operationId: op1.operationId,
-        nonce: '1',
-        schedule: op1.scheduledAt.add(this.delay),
-        target: this.target.address,
-        data: this.calldata,
-      });
-      expect(expectedOperationId).to.eq(op1.operationId);
-
-      // Consume
-      await time.increase(this.delay);
-      await this.manager.$_consumeScheduledOp(expectedOperationId);
-
-      // Check nonce
-      expect(await this.manager.getNonce(expectedOperationId)).to.be.bignumber.eq('1');
-
-      // Schedule again
-      const op2 = await scheduleOperation(this.manager, {
-        caller: this.caller,
-        target: this.target.address,
-        calldata: this.calldata,
-        delay: this.delay,
-      });
-      expectEvent(op2.receipt, 'OperationScheduled', {
-        operationId: op2.operationId,
-        nonce: '2',
-        schedule: op2.scheduledAt.add(this.delay),
-        target: this.target.address,
-        data: this.calldata,
-      });
-      expect(expectedOperationId).to.eq(op2.operationId);
-
-      // Check final nonce
-      expect(await this.manager.getNonce(expectedOperationId)).to.be.bignumber.eq('2');
-    });
-
-    it('reverts if the specified execution date is before the current timestamp + caller execution delay', async function () {
-      const executionDelay = time.duration.weeks(1).add(this.delay);
-      await this.manager.$_grantRole(this.role.id, this.caller, 0, executionDelay);
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      await expectRevertCustomError(
-        scheduleOperation(this.manager, {
-          caller: this.caller,
-          target: this.target.address,
-          calldata: this.calldata,
-          delay: this.delay,
-        }),
-        'AccessManagerUnauthorizedCall',
-        [this.caller, this.target.address, this.calldata.substring(0, 10)],
-      );
-    });
-
-    it('reverts if an operation is already schedule', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const { operationId } = await scheduleOperation(this.manager, {
-        caller: this.caller,
-        target: this.target.address,
-        calldata: this.calldata,
-        delay: this.delay,
-      });
-
-      await expectRevertCustomError(
-        scheduleOperation(this.manager, {
-          caller: this.caller,
-          target: this.target.address,
-          calldata: this.calldata,
-          delay: this.delay,
-        }),
-        'AccessManagerAlreadyScheduled',
-        [operationId],
-      );
-    });
-
-    it('panics scheduling calldata with less than 4 bytes', async function () {
-      const calldata = '0x1234'; // 2 bytes
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      // Managed contract
-      await expectRevert.unspecified(
-        scheduleOperation(this.manager, {
-          caller: this.caller,
-          target: this.target.address,
-          calldata: calldata,
-          delay: this.delay,
-        }),
-      );
-
-      // Manager contract
-      await expectRevert.unspecified(
-        scheduleOperation(this.manager, {
-          caller: this.caller,
-          target: this.manager.address,
-          calldata: calldata,
-          delay: this.delay,
-        }),
-      );
-    });
-
-    it('reverts scheduling an unknown operation to the manager', async function () {
-      const calldata = '0x12345678';
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      await expectRevertCustomError(
-        scheduleOperation(this.manager, {
-          caller: this.caller,
-          target: this.manager.address,
-          calldata,
-          delay: this.delay,
-        }),
-        'AccessManagerUnauthorizedCall',
-        [this.caller, this.manager.address, calldata],
-      );
-    });
   });
 
   describe('#execute', function () {
@@ -2398,83 +2189,8 @@ contract('AccessManager', function (accounts) {
       });
     });
 
-    it('executes with a delay consuming the scheduled operation', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const delay = time.duration.hours(4);
-      await this.manager.$_grantRole(this.role.id, this.caller, 0, 1); // Execution delay is needed so the operation is consumed
 
-      const { operationId } = await scheduleOperation(this.manager, {
-        caller: this.caller,
-        target: this.target.address,
-        calldata: this.calldata,
-        delay,
-      });
-      await time.increase(delay);
-      const { receipt } = await this.manager.execute(this.target.address, this.calldata, { from: this.caller });
-      expectEvent(receipt, 'OperationExecuted', {
-        operationId,
-        nonce: '1',
-      });
-      expect(await this.manager.getSchedule(operationId)).to.be.bignumber.equal('0');
-    });
 
-    it('executes with no delay consuming a scheduled operation', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const delay = time.duration.hours(4);
-
-      // give caller an execution delay
-      await this.manager.$_grantRole(this.role.id, this.caller, 0, 1);
-
-      const { operationId } = await scheduleOperation(this.manager, {
-        caller: this.caller,
-        target: this.target.address,
-        calldata: this.calldata,
-        delay,
-      });
-
-      // remove the execution delay
-      await this.manager.$_grantRole(this.role.id, this.caller, 0, 0);
-
-      await time.increase(delay);
-      const { receipt } = await this.manager.execute(this.target.address, this.calldata, { from: this.caller });
-      expectEvent(receipt, 'OperationExecuted', {
-        operationId,
-        nonce: '1',
-      });
-      expect(await this.manager.getSchedule(operationId)).to.be.bignumber.equal('0');
-    });
-
-    it('keeps the original _executionId after finishing the call', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const executionIdBefore = await getStorageAt(this.manager.address, EXECUTION_ID_STORAGE_SLOT);
-      await this.manager.execute(this.target.address, this.calldata, { from: this.caller });
-      const executionIdAfter = await getStorageAt(this.manager.address, EXECUTION_ID_STORAGE_SLOT);
-      expect(executionIdBefore).to.be.bignumber.equal(executionIdAfter);
-    });
-
-    it('reverts executing twice', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const delay = time.duration.hours(2);
-      await this.manager.$_grantRole(this.role.id, this.caller, 0, 1); // Execution delay is needed so the operation is consumed
-
-      const { operationId } = await scheduleOperation(this.manager, {
-        caller: this.caller,
-        target: this.target.address,
-        calldata: this.calldata,
-        delay,
-      });
-      await time.increase(delay);
-      await this.manager.execute(this.target.address, this.calldata, { from: this.caller });
-      await expectRevertCustomError(
-        this.manager.execute(this.target.address, this.calldata, { from: this.caller }),
-        'AccessManagerNotScheduled',
-        [operationId],
-      );
-    });
   });
 
   describe('#consumeScheduledOp', function () {
@@ -2495,16 +2211,7 @@ contract('AccessManager', function (accounts) {
         await this.target.setIsConsumingScheduledOp(false, `0x${CONSUMING_SCHEDULE_STORAGE_SLOT.toString(16)}`);
       });
 
-      it('reverts as AccessManagerUnauthorizedConsume', async function () {
-        this.skip();
-        //This helper can only be used with Hardhat Network
-        await impersonate(this.caller);
-        await expectRevertCustomError(
-          this.manager.consumeScheduledOp(this.caller, this.calldata, { from: this.caller }),
-          'AccessManagerUnauthorizedConsume',
-          [this.caller],
-        );
-      });
+
     });
 
     describe('when caller is consuming scheduled operation', function () {

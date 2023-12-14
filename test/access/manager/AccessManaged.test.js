@@ -67,28 +67,6 @@ contract('AccessManaged', function (accounts) {
         ]);
       });
 
-      it('succeeds if the operation is scheduled', async function () {
-        // Arguments
-        const delay = time.duration.hours(12);
-        const calldata = await this.managed.contract.methods[method]().encodeABI();
-
-        // Schedule
-        this.skip();
-        //This helper can only be used with Hardhat Network
-        const timestamp = await time.latest();
-        const scheduledAt = timestamp.addn(1);
-        const when = scheduledAt.add(delay);
-        await setNextBlockTimestamp(scheduledAt);
-        await this.authority.schedule(this.managed.address, calldata, when, {
-          from: roleMember,
-        });
-
-        // Set execution date
-        await setNextBlockTimestamp(when);
-
-        // Shouldn't revert
-        await this.managed.methods[method]({ from: roleMember });
-      });
     });
   });
 
@@ -103,27 +81,6 @@ contract('AccessManaged', function (accounts) {
       ]);
     });
 
-    it('reverts if the new authority is not a valid authority', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      await impersonate(this.authority.address);
-      await expectRevertCustomError(
-        this.managed.setAuthority(other, { from: this.authority.address }),
-        'AccessManagedInvalidAuthority',
-        [other],
-      );
-    });
-
-    it('sets authority and emits AuthorityUpdated event', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      await impersonate(this.authority.address);
-      const { receipt } = await this.managed.setAuthority(this.newAuthority.address, { from: this.authority.address });
-      await expectEvent(receipt, 'AuthorityUpdated', {
-        authority: this.newAuthority.address,
-      });
-      expect(await this.managed.authority()).to.eq(this.newAuthority.address);
-    });
   });
 
   describe('isConsumingScheduledOp', function () {

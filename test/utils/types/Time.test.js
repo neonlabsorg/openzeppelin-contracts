@@ -45,17 +45,6 @@ contract('Time', function () {
   });
 
   describe('clocks', function () {
-    it('timestamp', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      expect(await this.mock.$timestamp()).to.be.bignumber.equal(web3.utils.toBN(await clock.timestamp()));
-    });
-
-    it('block number', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      expect(await this.mock.$blockNumber()).to.be.bignumber.equal(web3.utils.toBN(await clock.blocknumber()));
-    });
   });
 
   describe('Delay', function () {
@@ -91,58 +80,5 @@ contract('Time', function () {
       }
     });
 
-    it('get & getFull', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const timepoint = await clock.timestamp().then(BigInt);
-      const valueBefore = 24194n;
-      const valueAfter = 4214143n;
-
-      for (const effect of effectSamplesForTimepoint(timepoint)) {
-        const isPast = effect <= timepoint;
-
-        const delay = packDelay({ valueBefore, valueAfter, effect });
-
-        expect(await this.mock.$get(delay)).to.be.bignumber.equal(String(isPast ? valueAfter : valueBefore));
-
-        const result = await this.mock.$getFull(delay);
-        expect(result[0]).to.be.bignumber.equal(String(isPast ? valueAfter : valueBefore));
-        expect(result[1]).to.be.bignumber.equal(String(isPast ? 0n : valueAfter));
-        expect(result[2]).to.be.bignumber.equal(String(isPast ? 0n : effect));
-      }
-    });
-
-    it('withUpdate', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const timepoint = await clock.timestamp().then(BigInt);
-      const valueBefore = 24194n;
-      const valueAfter = 4214143n;
-      const newvalueAfter = 94716n;
-
-      for (const effect of effectSamplesForTimepoint(timepoint))
-        for (const minSetback of [...SOME_VALUES, MAX_UINT32]) {
-          const isPast = effect <= timepoint;
-          const expectedvalueBefore = isPast ? valueAfter : valueBefore;
-          const expectedSetback = max(minSetback, expectedvalueBefore - newvalueAfter, 0n);
-
-          const result = await this.mock.$withUpdate(
-            packDelay({ valueBefore, valueAfter, effect }),
-            newvalueAfter,
-            minSetback,
-          );
-
-          expect(result[0]).to.be.bignumber.equal(
-            String(
-              packDelay({
-                valueBefore: expectedvalueBefore,
-                valueAfter: newvalueAfter,
-                effect: timepoint + expectedSetback,
-              }),
-            ),
-          );
-          expect(result[1]).to.be.bignumber.equal(String(timepoint + expectedSetback));
-        }
-    });
   });
 });

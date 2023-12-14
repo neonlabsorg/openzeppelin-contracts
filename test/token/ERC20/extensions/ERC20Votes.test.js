@@ -55,20 +55,7 @@ contract('ERC20Votes', function (accounts) {
         ]);
       });
 
-      it('recent checkpoints', async function () {
-        this.skip();
-        //This helper can only be used with Hardhat Network
-        await this.token.delegate(holder, { from: holder });
-        for (let i = 0; i < 6; i++) {
-          await this.token.$_mint(holder, 1);
-        }
-        const timepoint = await clock[mode]();
-        expect(await this.token.numCheckpoints(holder)).to.be.bignumber.equal('6');
-        // recent
-        expect(await this.token.getPastVotes(holder, timepoint - 1)).to.be.bignumber.equal('5');
-        // non-recent
-        expect(await this.token.getPastVotes(holder, timepoint - 6)).to.be.bignumber.equal('0');
-      });
+    
 
       describe('set delegation', function () {
         describe('call', function () {
@@ -409,120 +396,11 @@ contract('ERC20Votes', function (accounts) {
             expect(await this.token.getPastVotes(other1, t3.timepoint)).to.be.bignumber.equal('80');
             expect(await this.token.getPastVotes(other1, t4.timepoint)).to.be.bignumber.equal('100');
           });
-
-          it('does not add more than one checkpoint in a block', async function () {
-            await this.token.transfer(recipient, '100', { from: holder });
-            expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('0');
-            this.skip();
-            //the method evm_setAutomine does not exist/is not available
-            const [t1, t2, t3] = await batchInBlock([
-              () => this.token.delegate(other1, { from: recipient, gas: 200000 }),
-              () => this.token.transfer(other2, 10, { from: recipient, gas: 200000 }),
-              () => this.token.transfer(other2, 10, { from: recipient, gas: 200000 }),
-            ]);
-            t1.timepoint = await clockFromReceipt[mode](t1.receipt);
-            t2.timepoint = await clockFromReceipt[mode](t2.receipt);
-            t3.timepoint = await clockFromReceipt[mode](t3.receipt);
-
-            expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('1');
-            expect(await this.token.checkpoints(other1, 0)).to.be.deep.equal([t1.timepoint.toString(), '80']);
-
-            const t4 = await this.token.transfer(recipient, 20, { from: holder });
-            t4.timepoint = await clockFromReceipt[mode](t4.receipt);
-
-            expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('2');
-            expect(await this.token.checkpoints(other1, 1)).to.be.deep.equal([t4.timepoint.toString(), '100']);
-          });
         });
 
         describe('getPastVotes', function () {
-          it('reverts if block number >= current block', async function () {
-            this.skip();
-            const clock = await this.token.clock();
-            await expectRevertCustomError(this.token.getPastVotes(other1, 5e10), 'ERC5805FutureLookup', [5e10, clock]);
-          });
-
           it('returns 0 if there are no checkpoints', async function () {
             expect(await this.token.getPastVotes(other1, 0)).to.be.bignumber.equal('0');
-          });
-
-          it('returns the latest block if >= last checkpoint block', async function () {
-            this.skip();
-            //the method evm_setAutomine does not exist/is not available
-            const { receipt } = await this.token.delegate(other1, { from: holder });
-            const timepoint = await clockFromReceipt[mode](receipt);
-            await time.advanceBlock();
-            await time.advanceBlock();
-
-            expect(await this.token.getPastVotes(other1, timepoint)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-            expect(await this.token.getPastVotes(other1, timepoint + 1)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-          });
-
-          it('returns zero if < first checkpoint block', async function () {
-            this.skip();
-            //this helper can only be used with Hardhat Network
-            await time.advanceBlock();
-            const { receipt } = await this.token.delegate(other1, { from: holder });
-            const timepoint = await clockFromReceipt[mode](receipt);
-            await time.advanceBlock();
-            await time.advanceBlock();
-
-            expect(await this.token.getPastVotes(other1, timepoint - 1)).to.be.bignumber.equal('0');
-            expect(await this.token.getPastVotes(other1, timepoint + 1)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-          });
-
-          it('generally returns the voting balance at the appropriate checkpoint', async function () {
-            this.skip();
-            //this helper can only be used with Hardhat Network
-            const t1 = await this.token.delegate(other1, { from: holder });
-            await time.advanceBlock();
-            await time.advanceBlock();
-            const t2 = await this.token.transfer(other2, 10, { from: holder });
-            await time.advanceBlock();
-            await time.advanceBlock();
-            const t3 = await this.token.transfer(other2, 10, { from: holder });
-            await time.advanceBlock();
-            await time.advanceBlock();
-            const t4 = await this.token.transfer(holder, 20, { from: other2 });
-            await time.advanceBlock();
-            await time.advanceBlock();
-
-            t1.timepoint = await clockFromReceipt[mode](t1.receipt);
-            t2.timepoint = await clockFromReceipt[mode](t2.receipt);
-            t3.timepoint = await clockFromReceipt[mode](t3.receipt);
-            t4.timepoint = await clockFromReceipt[mode](t4.receipt);
-
-            expect(await this.token.getPastVotes(other1, t1.timepoint - 1)).to.be.bignumber.equal('0');
-            expect(await this.token.getPastVotes(other1, t1.timepoint)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-            expect(await this.token.getPastVotes(other1, t1.timepoint + 1)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-            expect(await this.token.getPastVotes(other1, t2.timepoint)).to.be.bignumber.equal(
-              '9999999999999999999999990',
-            );
-            expect(await this.token.getPastVotes(other1, t2.timepoint + 1)).to.be.bignumber.equal(
-              '9999999999999999999999990',
-            );
-            expect(await this.token.getPastVotes(other1, t3.timepoint)).to.be.bignumber.equal(
-              '9999999999999999999999980',
-            );
-            expect(await this.token.getPastVotes(other1, t3.timepoint + 1)).to.be.bignumber.equal(
-              '9999999999999999999999980',
-            );
-            expect(await this.token.getPastVotes(other1, t4.timepoint)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-            expect(await this.token.getPastVotes(other1, t4.timepoint + 1)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
           });
         });
       });
@@ -532,82 +410,10 @@ contract('ERC20Votes', function (accounts) {
           await this.token.delegate(holder, { from: holder });
         });
 
-        it('reverts if block number >= current block', async function () {
-          this.skip();
-          const clock = await this.token.clock();
-          await expectRevertCustomError(this.token.getPastTotalSupply(5e10), 'ERC5805FutureLookup', [5e10, clock]);
-        });
-
         it('returns 0 if there are no checkpoints', async function () {
           expect(await this.token.getPastTotalSupply(0)).to.be.bignumber.equal('0');
         });
 
-        it('returns the latest block if >= last checkpoint block', async function () {
-          this.skip();
-          //the method evm_setAutomine does not exist/is not available
-          const { receipt } = await this.token.$_mint(holder, supply);
-          const timepoint = await clockFromReceipt[mode](receipt);
-          await time.advanceBlock();
-          await time.advanceBlock();
-
-          expect(await this.token.getPastTotalSupply(timepoint)).to.be.bignumber.equal(supply);
-          expect(await this.token.getPastTotalSupply(timepoint + 1)).to.be.bignumber.equal(supply);
-        });
-
-        it('returns zero if < first checkpoint block', async function () {
-          this.skip();
-          //this helper can only be used with Hardhat Network
-          await time.advanceBlock();
-          const { receipt } = await this.token.$_mint(holder, supply);
-          const timepoint = await clockFromReceipt[mode](receipt);
-          await time.advanceBlock();
-          await time.advanceBlock();
-
-          expect(await this.token.getPastTotalSupply(timepoint - 1)).to.be.bignumber.equal('0');
-          expect(await this.token.getPastTotalSupply(timepoint + 1)).to.be.bignumber.equal(
-            '10000000000000000000000000',
-          );
-        });
-
-        it('generally returns the voting balance at the appropriate checkpoint', async function () {
-          this.skip();
-          //this helper can only be used with Hardhat Network
-          const t1 = await this.token.$_mint(holder, supply);
-          await time.advanceBlock();
-          await time.advanceBlock();
-          const t2 = await this.token.$_burn(holder, 10);
-          await time.advanceBlock();
-          await time.advanceBlock();
-          const t3 = await this.token.$_burn(holder, 10);
-          await time.advanceBlock();
-          await time.advanceBlock();
-          const t4 = await this.token.$_mint(holder, 20);
-          await time.advanceBlock();
-          await time.advanceBlock();
-
-          t1.timepoint = await clockFromReceipt[mode](t1.receipt);
-          t2.timepoint = await clockFromReceipt[mode](t2.receipt);
-          t3.timepoint = await clockFromReceipt[mode](t3.receipt);
-          t4.timepoint = await clockFromReceipt[mode](t4.receipt);
-
-          expect(await this.token.getPastTotalSupply(t1.timepoint - 1)).to.be.bignumber.equal('0');
-          expect(await this.token.getPastTotalSupply(t1.timepoint)).to.be.bignumber.equal('10000000000000000000000000');
-          expect(await this.token.getPastTotalSupply(t1.timepoint + 1)).to.be.bignumber.equal(
-            '10000000000000000000000000',
-          );
-          expect(await this.token.getPastTotalSupply(t2.timepoint)).to.be.bignumber.equal('9999999999999999999999990');
-          expect(await this.token.getPastTotalSupply(t2.timepoint + 1)).to.be.bignumber.equal(
-            '9999999999999999999999990',
-          );
-          expect(await this.token.getPastTotalSupply(t3.timepoint)).to.be.bignumber.equal('9999999999999999999999980');
-          expect(await this.token.getPastTotalSupply(t3.timepoint + 1)).to.be.bignumber.equal(
-            '9999999999999999999999980',
-          );
-          expect(await this.token.getPastTotalSupply(t4.timepoint)).to.be.bignumber.equal('10000000000000000000000000');
-          expect(await this.token.getPastTotalSupply(t4.timepoint + 1)).to.be.bignumber.equal(
-            '10000000000000000000000000',
-          );
-        });
       });
     });
   }

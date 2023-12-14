@@ -44,16 +44,6 @@ contract('Votes', function (accounts) {
           }
         });
 
-        it('reverts if block number >= current block', async function () {
-          this.skip();
-          const lastTxTimepoint = await clockFromReceipt[mode](this.txs.at(-1).receipt);
-          const clock = await this.votes.clock();
-          await expectRevertCustomError(this.votes.getPastTotalSupply(lastTxTimepoint + 1), 'ERC5805FutureLookup', [
-            lastTxTimepoint + 1,
-            clock,
-          ]);
-        });
-
         it('delegates', async function () {
           expect(await this.votes.getVotes(account1)).to.be.bignumber.equal('0');
           expect(await this.votes.getVotes(account2)).to.be.bignumber.equal('0');

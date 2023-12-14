@@ -224,48 +224,6 @@ contract('ERC2771Forwarder', function (accounts) {
         await expectRevertCustomError(this.forwarder.execute(req), 'ERC2771ForwarderMismatchedValue', [0, value]);
       });
     });
-
-    it('bubbles out of gas', async function () {
-      this.skip();
-      this.requestData.data = this.receiver.contract.methods.mockFunctionOutOfGas().encodeABI();
-      this.requestData.gas = 1_000_000;
-      this.requestData.signature = this.sign(this.alice.getPrivateKey());
-
-      const gasAvailable = 100_000;
-      await expectRevert.assertion(this.forwarder.execute(this.requestData, { gas: gasAvailable }));
-
-      const { transactions } = await web3.eth.getBlock('latest');
-      const { gasUsed } = await web3.eth.getTransactionReceipt(transactions[0]);
-
-      expect(gasUsed).to.be.equal(gasAvailable);
-    });
-
-    it('bubbles out of gas forced by the relayer', async function () {
-      this.skip();
-      // If there's an incentive behind executing requests, a malicious relayer could grief
-      // the forwarder by executing requests and providing a top-level call gas limit that
-      // is too low to successfully finish the request after the 63/64 rule.
-
-      // We set the baseline to the gas limit consumed by a successful request if it was executed
-      // normally. Note this includes the 21000 buffer that also the relayer will be charged to
-      // start a request execution.
-      const estimate = await this.estimateRequest(this.request);
-
-      // Because the relayer call consumes gas until the `CALL` opcode, the gas left after failing
-      // the subcall won't enough to finish the top level call (after testing), so we add a
-      // moderated buffer.
-      const gasAvailable = estimate + 2_000;
-
-      // The subcall out of gas should be caught by the contract and then bubbled up consuming
-      // the available gas with an `invalid` opcode.
-      await expectRevert.outOfGas(this.forwarder.execute(this.requestData, { gas: gasAvailable }));
-
-      const { transactions } = await web3.eth.getBlock('latest');
-      const { gasUsed } = await web3.eth.getTransactionReceipt(transactions[0]);
-
-      // We assert that indeed the gas was totally consumed.
-      expect(gasUsed).to.be.equal(gasAvailable);
-    });
   });
 
   context('executeBatch', function () {
@@ -491,54 +449,6 @@ contract('ERC2771Forwarder', function (accounts) {
             web3.utils.toBN(this.initialTamperedRequestNonce),
           );
         });
-      });
-
-      it('bubbles out of gas', async function () {
-        this.skip();
-        this.requestDatas[this.idx].data = this.receiver.contract.methods.mockFunctionOutOfGas().encodeABI();
-        this.requestDatas[this.idx].gas = 1_000_000;
-        this.requestDatas[this.idx].signature = this.sign(
-          this.signers[this.idx].getPrivateKey(),
-          this.requestDatas[this.idx],
-        );
-
-        const gasAvailable = 300_000;
-        await expectRevert.assertion(
-          this.forwarder.executeBatch(this.requestDatas, constants.ZERO_ADDRESS, {
-            gas: gasAvailable,
-            value: this.requestDatas.reduce((acc, { value }) => acc + Number(value), 0),
-          }),
-        );
-
-        const { transactions } = await web3.eth.getBlock('latest');
-        const { gasUsed } = await web3.eth.getTransactionReceipt(transactions[0]);
-
-        expect(gasUsed).to.be.equal(gasAvailable);
-      });
-
-      it('bubbles out of gas forced by the relayer', async function () {
-        this.skip();
-        // Similarly to the single execute, a malicious relayer could grief requests.
-
-        // We estimate until the selected request as if they were executed normally
-        const estimate = await this.gasUntil(this.requestDatas, this.idx);
-
-        // We add a Buffer to account for all the gas that's used before the selected call.
-        // Note is slightly bigger because the selected request is not the index 0 and it affects
-        // the buffer needed.
-        const gasAvailable = estimate + 10_000;
-
-        // The subcall out of gas should be caught by the contract and then bubbled up consuming
-        // the available gas with an `invalid` opcode.
-        await expectRevert.outOfGas(
-          this.forwarder.executeBatch(this.requestDatas, constants.ZERO_ADDRESS, { gas: gasAvailable }),
-        );
-
-        const { transactions } = await web3.eth.getBlock('latest');
-        const { gasUsed } = await web3.eth.getTransactionReceipt(transactions[0]);
-
-        // We assert that indeed the gas was totally consumed.
-        expect(gasUsed).to.be.equal(gasAvailable);
       });
     });
   });

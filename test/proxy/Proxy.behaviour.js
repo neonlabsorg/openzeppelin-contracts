@@ -18,13 +18,6 @@ module.exports = function shouldBehaveLikeProxy(createProxy, accounts) {
   });
 
   const assertProxyInitialization = function ({ value, balance }) {
-    it('sets the implementation address', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      const implementationSlot = await getSlot(this.proxy, ImplementationSlot);
-      const implementationAddress = web3.utils.toChecksumAddress(implementationSlot.substr(-40));
-      expect(implementationAddress).to.be.equal(this.implementation);
-    });
 
     it('initializes the proxy', async function () {
       const dummy = new DummyImplementation(this.proxy);

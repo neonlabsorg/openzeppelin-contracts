@@ -129,47 +129,6 @@ contract('ERC721Votes', function (accounts) {
           this.account2Votes = '0';
         });
 
-        it('generally returns the voting balance at the appropriate checkpoint', async function () {
-          this.skip();
-          //this helper can only be used with Hardhat Network
-          await this.votes.$_mint(account1, tokens[1]);
-          await this.votes.$_mint(account1, tokens[2]);
-          await this.votes.$_mint(account1, tokens[3]);
-
-          const total = await this.votes.balanceOf(account1);
-
-          const t1 = await this.votes.delegate(other1, { from: account1 });
-          await time.advanceBlock();
-          await time.advanceBlock();
-          const t2 = await this.votes.transferFrom(account1, other2, tokens[0], { from: account1 });
-          await time.advanceBlock();
-          await time.advanceBlock();
-          const t3 = await this.votes.transferFrom(account1, other2, tokens[2], { from: account1 });
-          await time.advanceBlock();
-          await time.advanceBlock();
-          const t4 = await this.votes.transferFrom(other2, account1, tokens[2], { from: other2 });
-          await time.advanceBlock();
-          await time.advanceBlock();
-
-          t1.timepoint = await clockFromReceipt[mode](t1.receipt);
-          t2.timepoint = await clockFromReceipt[mode](t2.receipt);
-          t3.timepoint = await clockFromReceipt[mode](t3.receipt);
-          t4.timepoint = await clockFromReceipt[mode](t4.receipt);
-
-          expect(await this.votes.getPastVotes(other1, t1.timepoint - 1)).to.be.bignumber.equal('0');
-          expect(await this.votes.getPastVotes(other1, t1.timepoint)).to.be.bignumber.equal(total);
-          expect(await this.votes.getPastVotes(other1, t1.timepoint + 1)).to.be.bignumber.equal(total);
-          expect(await this.votes.getPastVotes(other1, t2.timepoint)).to.be.bignumber.equal('3');
-          expect(await this.votes.getPastVotes(other1, t2.timepoint + 1)).to.be.bignumber.equal('3');
-          expect(await this.votes.getPastVotes(other1, t3.timepoint)).to.be.bignumber.equal('2');
-          expect(await this.votes.getPastVotes(other1, t3.timepoint + 1)).to.be.bignumber.equal('2');
-          expect(await this.votes.getPastVotes(other1, t4.timepoint)).to.be.bignumber.equal('3');
-          expect(await this.votes.getPastVotes(other1, t4.timepoint + 1)).to.be.bignumber.equal('3');
-
-          this.account1Votes = '0';
-          this.account2Votes = '0';
-        });
-
         afterEach(async function () {
           expect(await this.votes.getVotes(account1)).to.be.bignumber.equal(this.account1Votes);
           expect(await this.votes.getVotes(account2)).to.be.bignumber.equal(this.account2Votes);

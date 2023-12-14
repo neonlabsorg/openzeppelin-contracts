@@ -264,20 +264,6 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
         expect(await this.accessControl.hasRole(DEFAULT_ADMIN_ROLE, value)).to.be.true;
       });
 
-      it('changes if the default admin changes', async function () {
-        this.skip();
-        //This helper can only be used with Hardhat Network
-        // Starts an admin transfer
-        await this.accessControl.beginDefaultAdminTransfer(newDefaultAdmin, { from: defaultAdmin });
-
-        // Wait for acceptance
-        const acceptSchedule = web3.utils.toBN(await time.latest()).add(delay);
-        await time.setNextBlockTimestamp(acceptSchedule.addn(1));
-        await this.accessControl.acceptDefaultAdminTransfer({ from: newDefaultAdmin });
-
-        const value = await this.accessControl[getter]();
-        expect(value).to.equal(newDefaultAdmin);
-      });
     });
   }
 
@@ -293,39 +279,6 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
         await this.accessControl.beginDefaultAdminTransfer(newDefaultAdmin, { from: defaultAdmin });
       });
 
-      for (const [fromSchedule, tag] of [
-        [-1, 'before'],
-        [0, 'exactly when'],
-        [1, 'after'],
-      ]) {
-        it(`returns pending admin and schedule ${tag} it passes if not accepted`, async function () {
-          this.skip();
-          //This helper can only be used with Hardhat Network
-          // Wait until schedule + fromSchedule
-          const { schedule: firstSchedule } = await this.accessControl.pendingDefaultAdmin();
-          await time.setNextBlockTimestamp(firstSchedule.toNumber() + fromSchedule);
-          await network.provider.send('evm_mine'); // Mine a block to force the timestamp
-
-          const { newAdmin, schedule } = await this.accessControl.pendingDefaultAdmin();
-          expect(newAdmin).to.eq(newDefaultAdmin);
-          expect(schedule).to.be.bignumber.eq(firstSchedule);
-        });
-      }
-
-      it('returns 0 after schedule passes and the transfer was accepted', async function () {
-        this.skip();
-        //This helper can only be used with Hardhat Network
-        // Wait after schedule
-        const { schedule: firstSchedule } = await this.accessControl.pendingDefaultAdmin();
-        await time.setNextBlockTimestamp(firstSchedule.addn(1));
-
-        // Accepts
-        await this.accessControl.acceptDefaultAdminTransfer({ from: newDefaultAdmin });
-
-        const { newAdmin, schedule } = await this.accessControl.pendingDefaultAdmin();
-        expect(newAdmin).to.eq(ZERO_ADDRESS);
-        expect(schedule).to.be.bignumber.eq(ZERO);
-      });
     });
   });
 
@@ -341,23 +294,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
         await this.accessControl.changeDefaultAdminDelay(newDelay, { from: defaultAdmin });
       });
 
-      for (const [fromSchedule, tag, expectedDelay, delayTag] of [
-        [-1, 'before', delay, 'old'],
-        [0, 'exactly when', delay, 'old'],
-        [1, 'after', newDelay, 'new'],
-      ]) {
-        it(`returns ${delayTag} delay ${tag} delay schedule passes`, async function () {
-          this.skip();
-          //This helper can only be used with Hardhat Network
-          // Wait until schedule + fromSchedule
-          const { schedule } = await this.accessControl.pendingDefaultAdminDelay();
-          await time.setNextBlockTimestamp(schedule.toNumber() + fromSchedule);
-          await network.provider.send('evm_mine'); // Mine a block to force the timestamp
 
-          const currentDelay = await this.accessControl.defaultAdminDelay();
-          expect(currentDelay).to.be.bignumber.eq(expectedDelay);
-        });
-      }
     });
   });
 
@@ -375,24 +312,6 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
         await this.accessControl.changeDefaultAdminDelay(newDelay, { from: defaultAdmin });
       });
 
-      for (const [fromSchedule, tag, expectedDelay, delayTag, expectZeroSchedule] of [
-        [-1, 'before', newDelay, 'new'],
-        [0, 'exactly when', newDelay, 'new'],
-        [1, 'after', ZERO, 'zero', true],
-      ]) {
-        it(`returns ${delayTag} delay ${tag} delay schedule passes`, async function () {
-          this.skip();
-          //This helper can only be used with Hardhat Network
-          // Wait until schedule + fromSchedule
-          const { schedule: firstSchedule } = await this.accessControl.pendingDefaultAdminDelay();
-          await time.setNextBlockTimestamp(firstSchedule.toNumber() + fromSchedule);
-          await network.provider.send('evm_mine'); // Mine a block to force the timestamp
-
-          const { newDelay, schedule } = await this.accessControl.pendingDefaultAdminDelay();
-          expect(newDelay).to.be.bignumber.eq(expectedDelay);
-          expect(schedule).to.be.bignumber.eq(expectZeroSchedule ? ZERO : firstSchedule);
-        });
-      }
     });
   });
 
@@ -475,41 +394,6 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
         acceptSchedule = web3.utils.toBN(await time.latest()).add(delay);
       });
 
-      for (const [fromSchedule, tag] of [
-        [-1, 'before'],
-        [0, 'exactly when'],
-        [1, 'after'],
-      ]) {
-        it(`should be able to begin a transfer again ${tag} acceptSchedule passes`, async function () {
-          this.skip();
-          //This helper can only be used with Hardhat Network
-          // Wait until schedule + fromSchedule
-          await time.setNextBlockTimestamp(acceptSchedule.toNumber() + fromSchedule);
-
-          // defaultAdmin changes its mind and begin again to another address
-          const receipt = await this.accessControl.beginDefaultAdminTransfer(other, { from: defaultAdmin });
-          const newSchedule = web3.utils.toBN(await time.latest()).add(delay);
-          const { newAdmin, schedule } = await this.accessControl.pendingDefaultAdmin();
-          expect(newAdmin).to.equal(other);
-          expect(schedule).to.be.bignumber.equal(newSchedule);
-
-          // Cancellation is always emitted since it was never accepted
-          expectEvent(receipt, 'DefaultAdminTransferCanceled');
-        });
-      }
-
-      it('should not emit a cancellation event if the new default admin accepted', async function () {
-        this.skip();
-        //This helper can only be used with Hardhat Network
-        // Wait until the acceptSchedule has passed
-        await time.setNextBlockTimestamp(acceptSchedule.addn(1));
-
-        // Accept and restart
-        await this.accessControl.acceptDefaultAdminTransfer({ from: newDefaultAdmin });
-        const receipt = await this.accessControl.beginDefaultAdminTransfer(other, { from: newDefaultAdmin });
-
-        expectEvent.notEmitted(receipt, 'DefaultAdminTransferCanceled');
-      });
     });
 
     describe('when there is a pending delay', function () {
@@ -521,32 +405,6 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
         acceptSchedule = pendingDefaultAdminDelay.schedule;
       });
 
-      for (const [fromSchedule, schedulePassed, expectedDelay, delayTag] of [
-        [-1, 'before', delay, 'old'],
-        [0, 'exactly when', delay, 'old'],
-        [1, 'after', newDelay, 'new'],
-      ]) {
-        it(`should set the ${delayTag} delay and apply it to next default admin transfer schedule ${schedulePassed} acceptSchedule passed`, async function () {
-          // Wait until the expected fromSchedule time
-          this.skip();
-          //This helper can only be used with Hardhat Network
-          await time.setNextBlockTimestamp(acceptSchedule.toNumber() + fromSchedule);
-
-          // Start the new default admin transfer and get its schedule
-          const receipt = await this.accessControl.beginDefaultAdminTransfer(newDefaultAdmin, { from: defaultAdmin });
-          const expectedAcceptSchedule = web3.utils.toBN(await time.latest()).add(expectedDelay);
-
-          // Check that the schedule corresponds with the new delay
-          const { newAdmin, schedule: transferSchedule } = await this.accessControl.pendingDefaultAdmin();
-          expect(newAdmin).to.equal(newDefaultAdmin);
-          expect(transferSchedule).to.be.bignumber.equal(expectedAcceptSchedule);
-
-          expectEvent(receipt, 'DefaultAdminTransferScheduled', {
-            newAdmin,
-            acceptSchedule: expectedAcceptSchedule,
-          });
-        });
-      }
     });
   });
 
@@ -560,16 +418,6 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
       acceptSchedule = web3.utils.toBN(await time.latest()).add(delay);
     });
 
-    it('should revert if caller is not pending default admin', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      await time.setNextBlockTimestamp(acceptSchedule.addn(1));
-      await expectRevertCustomError(
-        this.accessControl.acceptDefaultAdminTransfer({ from: other }),
-        'AccessControlInvalidDefaultAdmin',
-        [other],
-      );
-    });
 
     describe('when caller is pending default admin and delay has passed', function () {
       beforeEach(async function () {
@@ -641,41 +489,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
         acceptSchedule = web3.utils.toBN(await time.latest()).add(delay);
       });
 
-      for (const [fromSchedule, tag] of [
-        [-1, 'before'],
-        [0, 'exactly when'],
-        [1, 'after'],
-      ]) {
-        it(`resets pending default admin and schedule ${tag} transfer schedule passes`, async function () {
-          // Advance until passed delay
-          this.skip();
-          //This helper can only be used with Hardhat Network
-          await time.setNextBlockTimestamp(acceptSchedule.toNumber() + fromSchedule);
 
-          const receipt = await this.accessControl.cancelDefaultAdminTransfer({ from: defaultAdmin });
-
-          const { newAdmin, schedule } = await this.accessControl.pendingDefaultAdmin();
-          expect(newAdmin).to.equal(constants.ZERO_ADDRESS);
-          expect(schedule).to.be.bignumber.equal(ZERO);
-
-          expectEvent(receipt, 'DefaultAdminTransferCanceled');
-        });
-      }
-
-      it('should revert if the previous default admin tries to accept', async function () {
-        await this.accessControl.cancelDefaultAdminTransfer({ from: defaultAdmin });
-        this.skip();
-        //This helper can only be used with Hardhat Network
-        // Advance until passed delay
-        await time.setNextBlockTimestamp(acceptSchedule.addn(1));
-
-        // Previous pending default admin should not be able to accept after cancellation.
-        await expectRevertCustomError(
-          this.accessControl.acceptDefaultAdminTransfer({ from: newDefaultAdmin }),
-          'AccessControlInvalidDefaultAdmin',
-          [newDefaultAdmin],
-        );
-      });
     });
 
     describe('when there is no pending default admin transfer', async function () {
@@ -705,88 +519,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
       delayPassed = expectedSchedule.addn(1);
     });
 
-    it('reverts if caller is not default admin', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      await time.setNextBlockTimestamp(delayPassed);
-      await expectRevertCustomError(
-        this.accessControl.renounceRole(DEFAULT_ADMIN_ROLE, other, { from: defaultAdmin }),
-        'AccessControlBadConfirmation',
-        [],
-      );
-    });
 
-    it("renouncing the admin role when not an admin doesn't affect the schedule", async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      await time.setNextBlockTimestamp(delayPassed);
-      await this.accessControl.renounceRole(DEFAULT_ADMIN_ROLE, other, { from: other });
-
-      const { newAdmin, schedule } = await this.accessControl.pendingDefaultAdmin();
-      expect(newAdmin).to.equal(constants.ZERO_ADDRESS);
-      expect(schedule).to.be.bignumber.equal(expectedSchedule);
-    });
-
-    it('keeps defaultAdmin consistent with hasRole if another non-defaultAdmin user renounces the DEFAULT_ADMIN_ROLE', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      await time.setNextBlockTimestamp(delayPassed);
-
-      // This passes because it's a noop
-      await this.accessControl.renounceRole(DEFAULT_ADMIN_ROLE, other, { from: other });
-
-      expect(await this.accessControl.hasRole(DEFAULT_ADMIN_ROLE, defaultAdmin)).to.be.true;
-      expect(await this.accessControl.defaultAdmin()).to.be.equal(defaultAdmin);
-    });
-
-    it('renounces role', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      await time.setNextBlockTimestamp(delayPassed);
-      const receipt = await this.accessControl.renounceRole(DEFAULT_ADMIN_ROLE, defaultAdmin, { from: defaultAdmin });
-
-      expect(await this.accessControl.hasRole(DEFAULT_ADMIN_ROLE, defaultAdmin)).to.be.false;
-      expect(await this.accessControl.defaultAdmin()).to.be.equal(constants.ZERO_ADDRESS);
-      expectEvent(receipt, 'RoleRevoked', {
-        role: DEFAULT_ADMIN_ROLE,
-        account: defaultAdmin,
-      });
-      expect(await this.accessControl.owner()).to.equal(constants.ZERO_ADDRESS);
-      const { newAdmin, schedule } = await this.accessControl.pendingDefaultAdmin();
-      expect(newAdmin).to.eq(ZERO_ADDRESS);
-      expect(schedule).to.be.bignumber.eq(ZERO);
-    });
-
-    it('allows to recover access using the internal _grantRole', async function () {
-      this.skip();
-      //This helper can only be used with Hardhat Network
-      await time.setNextBlockTimestamp(delayPassed);
-      await this.accessControl.renounceRole(DEFAULT_ADMIN_ROLE, defaultAdmin, { from: defaultAdmin });
-
-      const grantRoleReceipt = await this.accessControl.$_grantRole(DEFAULT_ADMIN_ROLE, other);
-      expectEvent(grantRoleReceipt, 'RoleGranted', {
-        role: DEFAULT_ADMIN_ROLE,
-        account: other,
-      });
-    });
-
-    describe('schedule not passed', function () {
-      for (const [fromSchedule, tag] of [
-        [-1, 'less'],
-        [0, 'equal'],
-      ]) {
-        it(`reverts if block.timestamp is ${tag} to schedule`, async function () {
-          this.skip();
-          //This helper can only be used with Hardhat Network
-          await time.setNextBlockTimestamp(delayNotPassed.toNumber() + fromSchedule);
-          await expectRevertCustomError(
-            this.accessControl.renounceRole(DEFAULT_ADMIN_ROLE, defaultAdmin, { from: defaultAdmin }),
-            'AccessControlEnforcedDefaultAdminDelay',
-            [expectedSchedule],
-          );
-        });
-      }
-    });
   });
 
   describe('changes delay', function () {
@@ -799,100 +532,7 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
         [other, DEFAULT_ADMIN_ROLE],
       );
     });
-
-    for (const [newDefaultAdminDelay, delayChangeType] of [
-      [web3.utils.toBN(delay).subn(time.duration.hours(1)), 'decreased'],
-      [web3.utils.toBN(delay).addn(time.duration.hours(1)), 'increased'],
-      [web3.utils.toBN(delay).addn(time.duration.days(5)), 'increased to more than 5 days'],
-    ]) {
-      describe(`when the delay is ${delayChangeType}`, function () {
-        it('begins the delay change to the new delay', async function () {
-          this.skip();
-          //This helper can only be used with Hardhat Network
-          // Begins the change
-          const receipt = await this.accessControl.changeDefaultAdminDelay(newDefaultAdminDelay, {
-            from: defaultAdmin,
-          });
-
-          // Calculate expected values
-          const cap = await this.accessControl.defaultAdminDelayIncreaseWait();
-          const changeDelay = newDefaultAdminDelay.lte(delay)
-            ? delay.sub(newDefaultAdminDelay)
-            : BN.min(newDefaultAdminDelay, cap);
-          const timestamp = web3.utils.toBN(await time.latest());
-          const effectSchedule = timestamp.add(changeDelay);
-
-          // Assert
-          const { newDelay, schedule } = await this.accessControl.pendingDefaultAdminDelay();
-          expect(newDelay).to.be.bignumber.eq(newDefaultAdminDelay);
-          expect(schedule).to.be.bignumber.eq(effectSchedule);
-          expectEvent(receipt, 'DefaultAdminDelayChangeScheduled', {
-            newDelay,
-            effectSchedule,
-          });
-        });
-
-        describe('scheduling again', function () {
-          beforeEach('schedule once', async function () {
-            await this.accessControl.changeDefaultAdminDelay(newDefaultAdminDelay, { from: defaultAdmin });
-          });
-
-          for (const [fromSchedule, tag] of [
-            [-1, 'before'],
-            [0, 'exactly when'],
-            [1, 'after'],
-          ]) {
-            const passed = fromSchedule > 0;
-
-            it(`succeeds ${tag} the delay schedule passes`, async function () {
-              // Wait until schedule + fromSchedule
-              const { schedule: firstSchedule } = await this.accessControl.pendingDefaultAdminDelay();
-              this.skip();
-              //This helper can only be used with Hardhat Network
-              await time.setNextBlockTimestamp(firstSchedule.toNumber() + fromSchedule);
-
-              // Default admin changes its mind and begins another delay change
-              const anotherNewDefaultAdminDelay = newDefaultAdminDelay.addn(time.duration.hours(2));
-              const receipt = await this.accessControl.changeDefaultAdminDelay(anotherNewDefaultAdminDelay, {
-                from: defaultAdmin,
-              });
-
-              // Calculate expected values
-              const cap = await this.accessControl.defaultAdminDelayIncreaseWait();
-              const timestamp = web3.utils.toBN(await time.latest());
-              const effectSchedule = timestamp.add(BN.min(cap, anotherNewDefaultAdminDelay));
-
-              // Assert
-              const { newDelay, schedule } = await this.accessControl.pendingDefaultAdminDelay();
-              expect(newDelay).to.be.bignumber.eq(anotherNewDefaultAdminDelay);
-              expect(schedule).to.be.bignumber.eq(effectSchedule);
-              expectEvent(receipt, 'DefaultAdminDelayChangeScheduled', {
-                newDelay,
-                effectSchedule,
-              });
-            });
-
-            const emit = passed ? 'not emit' : 'emit';
-            it(`should ${emit} a cancellation event ${tag} the delay schedule passes`, async function () {
-              // Wait until schedule + fromSchedule
-              const { schedule: firstSchedule } = await this.accessControl.pendingDefaultAdminDelay();
-              this.skip();
-              //This helper can only be used with Hardhat Network
-              await time.setNextBlockTimestamp(firstSchedule.toNumber() + fromSchedule);
-
-              // Default admin changes its mind and begins another delay change
-              const anotherNewDefaultAdminDelay = newDefaultAdminDelay.addn(time.duration.hours(2));
-              const receipt = await this.accessControl.changeDefaultAdminDelay(anotherNewDefaultAdminDelay, {
-                from: defaultAdmin,
-              });
-
-              const eventMatcher = passed ? expectEvent.notEmitted : expectEvent;
-              eventMatcher(receipt, 'DefaultAdminDelayChangeCanceled');
-            });
-          }
-        });
-      });
-    }
+    
   });
 
   describe('rollbacks a delay change', function () {
@@ -909,41 +549,6 @@ function shouldBehaveLikeAccessControlDefaultAdminRules(delay, defaultAdmin, new
         await this.accessControl.changeDefaultAdminDelay(time.duration.hours(12), { from: defaultAdmin });
       });
 
-      for (const [fromSchedule, tag] of [
-        [-1, 'before'],
-        [0, 'exactly when'],
-        [1, 'after'],
-      ]) {
-        const passed = fromSchedule > 0;
-
-        it(`resets pending delay and schedule ${tag} delay change schedule passes`, async function () {
-          // Wait until schedule + fromSchedule
-          const { schedule: firstSchedule } = await this.accessControl.pendingDefaultAdminDelay();
-          this.skip();
-          //This helper can only be used with Hardhat Network
-          await time.setNextBlockTimestamp(firstSchedule.toNumber() + fromSchedule);
-
-          await this.accessControl.rollbackDefaultAdminDelay({ from: defaultAdmin });
-
-          const { newDelay, schedule } = await this.accessControl.pendingDefaultAdminDelay();
-          expect(newDelay).to.be.bignumber.eq(ZERO);
-          expect(schedule).to.be.bignumber.eq(ZERO);
-        });
-
-        const emit = passed ? 'not emit' : 'emit';
-        it(`should ${emit} a cancellation event ${tag} the delay schedule passes`, async function () {
-          // Wait until schedule + fromSchedule
-          const { schedule: firstSchedule } = await this.accessControl.pendingDefaultAdminDelay();
-          this.skip();
-          //This helper can only be used with Hardhat Network
-          await time.setNextBlockTimestamp(firstSchedule.toNumber() + fromSchedule);
-
-          const receipt = await this.accessControl.rollbackDefaultAdminDelay({ from: defaultAdmin });
-
-          const eventMatcher = passed ? expectEvent.notEmitted : expectEvent;
-          eventMatcher(receipt, 'DefaultAdminDelayChangeCanceled');
-        });
-      }
     });
 
     describe('when there is no pending delay', function () {

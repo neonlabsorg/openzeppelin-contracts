@@ -123,17 +123,6 @@ contract('Address', function (accounts) {
         await expectRevert(this.mock.$functionCall(this.target.address, abiEncodedCall), 'CallReceiverMock: reverting');
       });
 
-      it('reverts when the called function runs out of gas', async function () {
-        this.skip();
-        const abiEncodedCall = this.target.contract.methods.mockFunctionOutOfGas().encodeABI();
-
-        await expectRevertCustomError(
-          this.mock.$functionCall(this.target.address, abiEncodedCall, { gas: '120000' }),
-          'FailedInnerCall',
-          [],
-        );
-      });
-
       it('reverts when the called function throws', async function () {
         const abiEncodedCall = this.target.contract.methods.mockFunctionThrows().encodeABI();
 
