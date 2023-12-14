@@ -84,17 +84,6 @@ contract('Governor', function (accounts) {
       shouldSupportInterfaces(['ERC165', 'ERC1155Receiver', 'Governor']);
       shouldBehaveLikeEIP6372(mode);
 
-      it.only('deployment check', async function () {
-        this.skip();
-        // https://neonlabs.atlassian.net/browse/NDEV-1483
-        expect(await this.mock.name()).to.be.equal(name);
-        expect(await this.mock.token()).to.be.equal(this.token.address);
-        expect(await this.mock.votingDelay()).to.be.bignumber.equal(votingDelay);
-        expect(await this.mock.votingPeriod()).to.be.bignumber.equal(votingPeriod);
-        expect(await this.mock.quorum(0)).to.be.bignumber.equal('0');
-        expect(await this.mock.COUNTING_MODE()).to.be.equal('support=bravo&quorum=for,abstain');
-      });
-
       it('nominal workflow', async function () {
         // Before
         expect(await this.mock.proposalProposer(this.proposal.id)).to.be.equal(constants.ZERO_ADDRESS);
