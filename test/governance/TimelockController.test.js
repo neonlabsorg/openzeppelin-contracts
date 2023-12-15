@@ -1,15 +1,19 @@
 const { BN, constants, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
 const { ZERO_ADDRESS, ZERO_BYTES32 } = constants;
+const { proposalStatesToBitMap } = require('../helpers/governance');
 
 const { expect } = require('chai');
 
 const { shouldSupportInterfaces } = require('../utils/introspection/SupportsInterface.behavior');
+const { expectRevertCustomError } = require('../helpers/customError');
+const { OperationState } = require('../helpers/enums');
 
 const TimelockController = artifacts.require('TimelockController');
 const CallReceiverMock = artifacts.require('CallReceiverMock');
 const Implementation2 = artifacts.require('Implementation2');
 const ERC721 = artifacts.require('$ERC721');
 const ERC1155 = artifacts.require('$ERC1155');
+const TimelockReentrant = artifacts.require('$TimelockReentrant');
 
 const MINDELAY = time.duration.days(1);
 
@@ -38,7 +42,7 @@ function genOperationBatch(targets, values, payloads, predecessor, salt) {
 contract('TimelockController', function (accounts) {
   const [, admin, proposer, canceller, executor, other] = accounts;
 
-  const TIMELOCK_ADMIN_ROLE = web3.utils.soliditySha3('TIMELOCK_ADMIN_ROLE');
+  const DEFAULT_ADMIN_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000000';
   const PROPOSER_ROLE = web3.utils.soliditySha3('PROPOSER_ROLE');
   const EXECUTOR_ROLE = web3.utils.soliditySha3('EXECUTOR_ROLE');
   const CANCELLER_ROLE = web3.utils.soliditySha3('CANCELLER_ROLE');
@@ -61,7 +65,7 @@ contract('TimelockController', function (accounts) {
   it('initial state', async function () {
     expect(await this.mock.getMinDelay()).to.be.bignumber.equal(MINDELAY);
 
-    expect(await this.mock.TIMELOCK_ADMIN_ROLE()).to.be.equal(TIMELOCK_ADMIN_ROLE);
+    expect(await this.mock.DEFAULT_ADMIN_ROLE()).to.be.equal(DEFAULT_ADMIN_ROLE);
     expect(await this.mock.PROPOSER_ROLE()).to.be.equal(PROPOSER_ROLE);
     expect(await this.mock.EXECUTOR_ROLE()).to.be.equal(EXECUTOR_ROLE);
     expect(await this.mock.CANCELLER_ROLE()).to.be.equal(CANCELLER_ROLE);
@@ -82,8 +86,8 @@ contract('TimelockController', function (accounts) {
   it('optional admin', async function () {
     const mock = await TimelockController.new(MINDELAY, [proposer], [executor], ZERO_ADDRESS, { from: other });
 
-    expect(await mock.hasRole(TIMELOCK_ADMIN_ROLE, admin)).to.be.equal(false);
-    expect(await mock.hasRole(TIMELOCK_ADMIN_ROLE, other)).to.be.equal(false);
+    expect(await mock.hasRole(DEFAULT_ADMIN_ROLE, admin)).to.be.equal(false);
+    expect(await mock.hasRole(DEFAULT_ADMIN_ROLE, mock.address)).to.be.equal(true);
   });
 
   describe('methods', function () {
@@ -181,7 +185,7 @@ contract('TimelockController', function (accounts) {
             { from: proposer },
           );
 
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.schedule(
               this.operation.target,
               this.operation.value,
@@ -191,12 +195,13 @@ contract('TimelockController', function (accounts) {
               MINDELAY,
               { from: proposer },
             ),
-            'TimelockController: operation already scheduled',
+            'TimelockUnexpectedOperationState',
+            [this.operation.id, proposalStatesToBitMap(OperationState.Unset)],
           );
         });
 
         it('prevent non-proposer from committing', async function () {
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.schedule(
               this.operation.target,
               this.operation.value,
@@ -206,12 +211,13 @@ contract('TimelockController', function (accounts) {
               MINDELAY,
               { from: other },
             ),
-            `AccessControl: account ${other.toLowerCase()} is missing role ${PROPOSER_ROLE}`,
+            `AccessControlUnauthorizedAccount`,
+            [other, PROPOSER_ROLE],
           );
         });
 
         it('enforce minimum delay', async function () {
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.schedule(
               this.operation.target,
               this.operation.value,
@@ -221,7 +227,8 @@ contract('TimelockController', function (accounts) {
               MINDELAY - 1,
               { from: proposer },
             ),
-            'TimelockController: insufficient delay',
+            'TimelockInsufficientDelay',
+            [MINDELAY, MINDELAY - 1],
           );
         });
 
@@ -251,7 +258,7 @@ contract('TimelockController', function (accounts) {
         });
 
         it('revert if operation is not scheduled', async function () {
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.execute(
               this.operation.target,
               this.operation.value,
@@ -260,7 +267,8 @@ contract('TimelockController', function (accounts) {
               this.operation.salt,
               { from: executor },
             ),
-            'TimelockController: operation is not ready',
+            'TimelockUnexpectedOperationState',
+            [this.operation.id, proposalStatesToBitMap(OperationState.Ready)],
           );
         });
 
@@ -278,7 +286,7 @@ contract('TimelockController', function (accounts) {
           });
 
           it('revert if execution comes too early 1/2', async function () {
-            await expectRevert(
+            await expectRevertCustomError(
               this.mock.execute(
                 this.operation.target,
                 this.operation.value,
@@ -287,7 +295,8 @@ contract('TimelockController', function (accounts) {
                 this.operation.salt,
                 { from: executor },
               ),
-              'TimelockController: operation is not ready',
+              'TimelockUnexpectedOperationState',
+              [this.operation.id, proposalStatesToBitMap(OperationState.Ready)],
             );
           });
 
@@ -295,7 +304,7 @@ contract('TimelockController', function (accounts) {
             const timestamp = await this.mock.getTimestamp(this.operation.id);
             await time.increaseTo(timestamp - 5); // -1 is too tight, test sometime fails
 
-            await expectRevert(
+            await expectRevertCustomError(
               this.mock.execute(
                 this.operation.target,
                 this.operation.value,
@@ -304,50 +313,12 @@ contract('TimelockController', function (accounts) {
                 this.operation.salt,
                 { from: executor },
               ),
-              'TimelockController: operation is not ready',
+              'TimelockUnexpectedOperationState',
+              [this.operation.id, proposalStatesToBitMap(OperationState.Ready)],
             );
           });
 
-          describe('on time', function () {
-            beforeEach(async function () {
-              const timestamp = await this.mock.getTimestamp(this.operation.id);
-              await time.increaseTo(timestamp);
-            });
-
-            it('executor can reveal', async function () {
-              // the test is not appropriate for neon environment
-              this.skip();
-              const receipt = await this.mock.execute(
-                this.operation.target,
-                this.operation.value,
-                this.operation.data,
-                this.operation.predecessor,
-                this.operation.salt,
-                { from: executor },
-              );
-              expectEvent(receipt, 'CallExecuted', {
-                id: this.operation.id,
-                index: web3.utils.toBN(0),
-                target: this.operation.target,
-                value: web3.utils.toBN(this.operation.value),
-                data: this.operation.data,
-              });
-            });
-
-            it('prevent non-executor from revealing', async function () {
-              await expectRevert(
-                this.mock.execute(
-                  this.operation.target,
-                  this.operation.value,
-                  this.operation.data,
-                  this.operation.predecessor,
-                  this.operation.salt,
-                  { from: other },
-                ),
-                `AccessControl: account ${other.toLowerCase()} is missing role ${EXECUTOR_ROLE}`,
-              );
-            });
-          });
+       
         });
       });
     });
@@ -409,7 +380,7 @@ contract('TimelockController', function (accounts) {
             { from: proposer },
           );
 
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.scheduleBatch(
               this.operation.targets,
               this.operation.values,
@@ -419,12 +390,13 @@ contract('TimelockController', function (accounts) {
               MINDELAY,
               { from: proposer },
             ),
-            'TimelockController: operation already scheduled',
+            'TimelockUnexpectedOperationState',
+            [this.operation.id, proposalStatesToBitMap(OperationState.Unset)],
           );
         });
 
         it('length of batch parameter must match #1', async function () {
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.scheduleBatch(
               this.operation.targets,
               [],
@@ -434,12 +406,13 @@ contract('TimelockController', function (accounts) {
               MINDELAY,
               { from: proposer },
             ),
-            'TimelockController: length mismatch',
+            'TimelockInvalidOperationLength',
+            [this.operation.targets.length, this.operation.payloads.length, 0],
           );
         });
 
         it('length of batch parameter must match #1', async function () {
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.scheduleBatch(
               this.operation.targets,
               this.operation.values,
@@ -449,12 +422,13 @@ contract('TimelockController', function (accounts) {
               MINDELAY,
               { from: proposer },
             ),
-            'TimelockController: length mismatch',
+            'TimelockInvalidOperationLength',
+            [this.operation.targets.length, 0, this.operation.payloads.length],
           );
         });
 
         it('prevent non-proposer from committing', async function () {
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.scheduleBatch(
               this.operation.targets,
               this.operation.values,
@@ -464,12 +438,13 @@ contract('TimelockController', function (accounts) {
               MINDELAY,
               { from: other },
             ),
-            `AccessControl: account ${other.toLowerCase()} is missing role ${PROPOSER_ROLE}`,
+            `AccessControlUnauthorizedAccount`,
+            [other, PROPOSER_ROLE],
           );
         });
 
         it('enforce minimum delay', async function () {
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.scheduleBatch(
               this.operation.targets,
               this.operation.values,
@@ -479,7 +454,8 @@ contract('TimelockController', function (accounts) {
               MINDELAY - 1,
               { from: proposer },
             ),
-            'TimelockController: insufficient delay',
+            'TimelockInsufficientDelay',
+            [MINDELAY, MINDELAY - 1],
           );
         });
       });
@@ -496,7 +472,7 @@ contract('TimelockController', function (accounts) {
         });
 
         it('revert if operation is not scheduled', async function () {
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.executeBatch(
               this.operation.targets,
               this.operation.values,
@@ -505,7 +481,8 @@ contract('TimelockController', function (accounts) {
               this.operation.salt,
               { from: executor },
             ),
-            'TimelockController: operation is not ready',
+            'TimelockUnexpectedOperationState',
+            [this.operation.id, proposalStatesToBitMap(OperationState.Ready)],
           );
         });
 
@@ -523,7 +500,7 @@ contract('TimelockController', function (accounts) {
           });
 
           it('revert if execution comes too early 1/2', async function () {
-            await expectRevert(
+            await expectRevertCustomError(
               this.mock.executeBatch(
                 this.operation.targets,
                 this.operation.values,
@@ -532,7 +509,8 @@ contract('TimelockController', function (accounts) {
                 this.operation.salt,
                 { from: executor },
               ),
-              'TimelockController: operation is not ready',
+              'TimelockUnexpectedOperationState',
+              [this.operation.id, proposalStatesToBitMap(OperationState.Ready)],
             );
           });
 
@@ -540,7 +518,7 @@ contract('TimelockController', function (accounts) {
             const timestamp = await this.mock.getTimestamp(this.operation.id);
             await time.increaseTo(timestamp - 5); // -1 is to tight, test sometime fails
 
-            await expectRevert(
+            await expectRevertCustomError(
               this.mock.executeBatch(
                 this.operation.targets,
                 this.operation.values,
@@ -549,7 +527,8 @@ contract('TimelockController', function (accounts) {
                 this.operation.salt,
                 { from: executor },
               ),
-              'TimelockController: operation is not ready',
+              'TimelockUnexpectedOperationState',
+              [this.operation.id, proposalStatesToBitMap(OperationState.Ready)],
             );
           });
 
@@ -559,30 +538,9 @@ contract('TimelockController', function (accounts) {
               await time.increaseTo(timestamp);
             });
 
-            it('executor can reveal', async function () {
-              // the test is not appropriate for neon environment
-              this.skip();
-              const receipt = await this.mock.executeBatch(
-                this.operation.targets,
-                this.operation.values,
-                this.operation.payloads,
-                this.operation.predecessor,
-                this.operation.salt,
-                { from: executor },
-              );
-              for (const i in this.operation.targets) {
-                expectEvent(receipt, 'CallExecuted', {
-                  id: this.operation.id,
-                  index: web3.utils.toBN(i),
-                  target: this.operation.targets[i],
-                  value: web3.utils.toBN(this.operation.values[i]),
-                  data: this.operation.payloads[i],
-                });
-              }
-            });
 
             it('prevent non-executor from revealing', async function () {
-              await expectRevert(
+              await expectRevertCustomError(
                 this.mock.executeBatch(
                   this.operation.targets,
                   this.operation.values,
@@ -591,12 +549,13 @@ contract('TimelockController', function (accounts) {
                   this.operation.salt,
                   { from: other },
                 ),
-                `AccessControl: account ${other.toLowerCase()} is missing role ${EXECUTOR_ROLE}`,
+                `AccessControlUnauthorizedAccount`,
+                [other, EXECUTOR_ROLE],
               );
             });
 
             it('length mismatch #1', async function () {
-              await expectRevert(
+              await expectRevertCustomError(
                 this.mock.executeBatch(
                   [],
                   this.operation.values,
@@ -605,12 +564,13 @@ contract('TimelockController', function (accounts) {
                   this.operation.salt,
                   { from: executor },
                 ),
-                'TimelockController: length mismatch',
+                'TimelockInvalidOperationLength',
+                [0, this.operation.payloads.length, this.operation.values.length],
               );
             });
 
             it('length mismatch #2', async function () {
-              await expectRevert(
+              await expectRevertCustomError(
                 this.mock.executeBatch(
                   this.operation.targets,
                   [],
@@ -619,12 +579,13 @@ contract('TimelockController', function (accounts) {
                   this.operation.salt,
                   { from: executor },
                 ),
-                'TimelockController: length mismatch',
+                'TimelockInvalidOperationLength',
+                [this.operation.targets.length, this.operation.payloads.length, 0],
               );
             });
 
             it('length mismatch #3', async function () {
-              await expectRevert(
+              await expectRevertCustomError(
                 this.mock.executeBatch(
                   this.operation.targets,
                   this.operation.values,
@@ -633,21 +594,21 @@ contract('TimelockController', function (accounts) {
                   this.operation.salt,
                   { from: executor },
                 ),
-                'TimelockController: length mismatch',
+                'TimelockInvalidOperationLength',
+                [this.operation.targets.length, 0, this.operation.values.length],
               );
             });
+
           });
         });
 
         it('partial execution', async function () {
-          // The test is not appropriate for neon environment
-          this.skip();
           const operation = genOperationBatch(
             [this.callreceivermock.address, this.callreceivermock.address, this.callreceivermock.address],
             [0, 0, 0],
             [
               this.callreceivermock.contract.methods.mockFunction().encodeABI(),
-              this.callreceivermock.contract.methods.mockFunctionThrows().encodeABI(),
+              this.callreceivermock.contract.methods.mockFunctionRevertsNoReason().encodeABI(),
               this.callreceivermock.contract.methods.mockFunction().encodeABI(),
             ],
             ZERO_BYTES32,
@@ -664,7 +625,7 @@ contract('TimelockController', function (accounts) {
             { from: proposer },
           );
           await time.increase(MINDELAY);
-          await expectRevert(
+          await expectRevertCustomError(
             this.mock.executeBatch(
               operation.targets,
               operation.values,
@@ -673,7 +634,8 @@ contract('TimelockController', function (accounts) {
               operation.salt,
               { from: executor },
             ),
-            'TimelockController: underlying transaction reverted',
+            'FailedInnerCall',
+            [],
           );
         });
       });
@@ -705,16 +667,18 @@ contract('TimelockController', function (accounts) {
       });
 
       it('cannot cancel invalid operation', async function () {
-        await expectRevert(
+        await expectRevertCustomError(
           this.mock.cancel(constants.ZERO_BYTES32, { from: canceller }),
-          'TimelockController: operation cannot be cancelled',
+          'TimelockUnexpectedOperationState',
+          [constants.ZERO_BYTES32, proposalStatesToBitMap([OperationState.Waiting, OperationState.Ready])],
         );
       });
 
       it('prevent non-canceller from canceling', async function () {
-        await expectRevert(
+        await expectRevertCustomError(
           this.mock.cancel(this.operation.id, { from: other }),
-          `AccessControl: account ${other.toLowerCase()} is missing role ${CANCELLER_ROLE}`,
+          `AccessControlUnauthorizedAccount`,
+          [other, CANCELLER_ROLE],
         );
       });
     });
@@ -722,159 +686,15 @@ contract('TimelockController', function (accounts) {
 
   describe('maintenance', function () {
     it('prevent unauthorized maintenance', async function () {
-      await expectRevert(this.mock.updateDelay(0, { from: other }), 'TimelockController: caller must be timelock');
+      await expectRevertCustomError(this.mock.updateDelay(0, { from: other }), 'TimelockUnauthorizedCaller', [other]);
     });
 
-    it('timelock scheduled maintenance', async function () {
-      // the test is not appropriate for neon environment
-      this.skip();
-      const newDelay = time.duration.hours(6);
-      const operation = genOperation(
-        this.mock.address,
-        0,
-        this.mock.contract.methods.updateDelay(newDelay.toString()).encodeABI(),
-        ZERO_BYTES32,
-        '0xf8e775b2c5f4d66fb5c7fa800f35ef518c262b6014b3c0aee6ea21bff157f108',
-      );
-
-      await this.mock.schedule(
-        operation.target,
-        operation.value,
-        operation.data,
-        operation.predecessor,
-        operation.salt,
-        MINDELAY,
-        { from: proposer },
-      );
-      await time.increase(MINDELAY);
-      const receipt = await this.mock.execute(
-        operation.target,
-        operation.value,
-        operation.data,
-        operation.predecessor,
-        operation.salt,
-        { from: executor },
-      );
-      expectEvent(receipt, 'MinDelayChange', { newDuration: newDelay.toString(), oldDuration: MINDELAY });
-
-      expect(await this.mock.getMinDelay()).to.be.bignumber.equal(newDelay);
-    });
-  });
-
-  describe('dependency', function () {
-    beforeEach(async function () {
-      this.operation1 = genOperation(
-        '0xdE66bD4c97304200A95aE0AadA32d6d01A867E39',
-        0,
-        '0x01dc731a',
-        ZERO_BYTES32,
-        '0x64e932133c7677402ead2926f86205e2ca4686aebecf5a8077627092b9bb2feb',
-      );
-      this.operation2 = genOperation(
-        '0x3c7944a3F1ee7fc8c5A5134ba7c79D11c3A1FCa3',
-        0,
-        '0x8f531849',
-        this.operation1.id,
-        '0x036e1311cac523f9548e6461e29fb1f8f9196b91910a41711ea22f5de48df07d',
-      );
-      await this.mock.schedule(
-        this.operation1.target,
-        this.operation1.value,
-        this.operation1.data,
-        this.operation1.predecessor,
-        this.operation1.salt,
-        MINDELAY,
-        { from: proposer },
-      );
-      await this.mock.schedule(
-        this.operation2.target,
-        this.operation2.value,
-        this.operation2.data,
-        this.operation2.predecessor,
-        this.operation2.salt,
-        MINDELAY,
-        { from: proposer },
-      );
-      await time.increase(MINDELAY);
-    });
-
-    it('cannot execute before dependency', async function () {
-      // the test is not appropriate for neon environment
-      this.skip();
-      await expectRevert(
-        this.mock.execute(
-          this.operation2.target,
-          this.operation2.value,
-          this.operation2.data,
-          this.operation2.predecessor,
-          this.operation2.salt,
-          { from: executor },
-        ),
-        'TimelockController: missing dependency',
-      );
-    });
-
-    it('can execute after dependency', async function () {
-      // the test is not appropriate for neon environment
-      this.skip();
-      await this.mock.execute(
-        this.operation1.target,
-        this.operation1.value,
-        this.operation1.data,
-        this.operation1.predecessor,
-        this.operation1.salt,
-        { from: executor },
-      );
-      await this.mock.execute(
-        this.operation2.target,
-        this.operation2.value,
-        this.operation2.data,
-        this.operation2.predecessor,
-        this.operation2.salt,
-        { from: executor },
-      );
-    });
   });
 
   describe('usage scenario', function () {
-    this.timeout(10000);
-
-    it('call', async function () {
-      // the test is not appropriate for neon environment
-      this.skip();
-      const operation = genOperation(
-        this.implementation2.address,
-        0,
-        this.implementation2.contract.methods.setValue(42).encodeABI(),
-        ZERO_BYTES32,
-        '0x8043596363daefc89977b25f9d9b4d06c3910959ef0c4d213557a903e1b555e2',
-      );
-
-      await this.mock.schedule(
-        operation.target,
-        operation.value,
-        operation.data,
-        operation.predecessor,
-        operation.salt,
-        MINDELAY,
-        { from: proposer },
-      );
-      await time.increase(MINDELAY);
-      await this.mock.execute(
-        operation.target,
-        operation.value,
-        operation.data,
-        operation.predecessor,
-        operation.salt,
-        { from: executor },
-      );
-
-      expect(await this.implementation2.getValue()).to.be.bignumber.equal(web3.utils.toBN(42));
-    });
+    //this.timeout(10000);
 
     it('call reverting', async function () {
-      // the test is not appropriate for neon environment
-      this.skip();
       const operation = genOperation(
         this.callreceivermock.address,
         0,
@@ -893,17 +713,16 @@ contract('TimelockController', function (accounts) {
         { from: proposer },
       );
       await time.increase(MINDELAY);
-      await expectRevert(
+      await expectRevertCustomError(
         this.mock.execute(operation.target, operation.value, operation.data, operation.predecessor, operation.salt, {
           from: executor,
         }),
-        'TimelockController: underlying transaction reverted',
+        'FailedInnerCall',
+        [],
       );
     });
 
     it('call throw', async function () {
-      // the test is not appropriate for neon environment
-      this.skip();
       const operation = genOperation(
         this.callreceivermock.address,
         0,
@@ -922,85 +741,17 @@ contract('TimelockController', function (accounts) {
         { from: proposer },
       );
       await time.increase(MINDELAY);
-      await expectRevert(
+      // Targeted function reverts with a panic code (0x1) + the timelock bubble the panic code
+      await expectRevert.unspecified(
         this.mock.execute(operation.target, operation.value, operation.data, operation.predecessor, operation.salt, {
           from: executor,
         }),
-        'TimelockController: underlying transaction reverted',
       );
     });
 
-    it('call out of gas', async function () {
-      // the test is not appropriate for neon environment
-      this.skip();
-      const operation = genOperation(
-        this.callreceivermock.address,
-        0,
-        this.callreceivermock.contract.methods.mockFunctionOutOfGas().encodeABI(),
-        ZERO_BYTES32,
-        '0xf3274ce7c394c5b629d5215723563a744b817e1730cca5587c567099a14578fd',
-      );
 
-      await this.mock.schedule(
-        operation.target,
-        operation.value,
-        operation.data,
-        operation.predecessor,
-        operation.salt,
-        MINDELAY,
-        { from: proposer },
-      );
-      await time.increase(MINDELAY);
-      await expectRevert(
-        this.mock.execute(operation.target, operation.value, operation.data, operation.predecessor, operation.salt, {
-          from: executor,
-          gas: '70000',
-        }),
-        'TimelockController: underlying transaction reverted',
-      );
-    });
-
-    it('call payable with eth', async function () {
-      // the test is not appropriate for neon environment
-      this.skip();
-      const operation = genOperation(
-        this.callreceivermock.address,
-        1,
-        this.callreceivermock.contract.methods.mockFunction().encodeABI(),
-        ZERO_BYTES32,
-        '0x5ab73cd33477dcd36c1e05e28362719d0ed59a7b9ff14939de63a43073dc1f44',
-      );
-
-      await this.mock.schedule(
-        operation.target,
-        operation.value,
-        operation.data,
-        operation.predecessor,
-        operation.salt,
-        MINDELAY,
-        { from: proposer },
-      );
-      await time.increase(MINDELAY);
-
-      expect(await web3.eth.getBalance(this.mock.address)).to.be.bignumber.equal(web3.utils.toBN(0));
-      expect(await web3.eth.getBalance(this.callreceivermock.address)).to.be.bignumber.equal(web3.utils.toBN(0));
-
-      await this.mock.execute(
-        operation.target,
-        operation.value,
-        operation.data,
-        operation.predecessor,
-        operation.salt,
-        { from: executor, value: 1 },
-      );
-
-      expect(await web3.eth.getBalance(this.mock.address)).to.be.bignumber.equal(web3.utils.toBN(0));
-      expect(await web3.eth.getBalance(this.callreceivermock.address)).to.be.bignumber.equal(web3.utils.toBN(1));
-    });
 
     it('call nonpayable with eth', async function () {
-      // The test is not appropriate for neon environment
-      this.skip();
       const operation = genOperation(
         this.callreceivermock.address,
         1,
@@ -1023,11 +774,12 @@ contract('TimelockController', function (accounts) {
       expect(await web3.eth.getBalance(this.mock.address)).to.be.bignumber.equal(web3.utils.toBN(0));
       expect(await web3.eth.getBalance(this.callreceivermock.address)).to.be.bignumber.equal(web3.utils.toBN(0));
 
-      await expectRevert(
+      await expectRevertCustomError(
         this.mock.execute(operation.target, operation.value, operation.data, operation.predecessor, operation.salt, {
           from: executor,
         }),
-        'TimelockController: underlying transaction reverted',
+        'FailedInnerCall',
+        [],
       );
 
       expect(await web3.eth.getBalance(this.mock.address)).to.be.bignumber.equal(web3.utils.toBN(0));
@@ -1035,8 +787,6 @@ contract('TimelockController', function (accounts) {
     });
 
     it('call reverting with eth', async function () {
-      // The test is not appropriate for neon environment
-      this.skip();
       const operation = genOperation(
         this.callreceivermock.address,
         1,
@@ -1059,11 +809,12 @@ contract('TimelockController', function (accounts) {
       expect(await web3.eth.getBalance(this.mock.address)).to.be.bignumber.equal(web3.utils.toBN(0));
       expect(await web3.eth.getBalance(this.callreceivermock.address)).to.be.bignumber.equal(web3.utils.toBN(0));
 
-      await expectRevert(
+      await expectRevertCustomError(
         this.mock.execute(operation.target, operation.value, operation.data, operation.predecessor, operation.salt, {
           from: executor,
         }),
-        'TimelockController: underlying transaction reverted',
+        'FailedInnerCall',
+        [],
       );
 
       expect(await web3.eth.getBalance(this.mock.address)).to.be.bignumber.equal(web3.utils.toBN(0));

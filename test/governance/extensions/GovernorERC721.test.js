@@ -1,5 +1,6 @@
 const { expectEvent } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
+
 const Enums = require('../../helpers/enums');
 const { GovernorHelper } = require('../../helpers/governance');
 
@@ -15,7 +16,7 @@ contract('GovernorERC721', function (accounts) {
   const [owner, voter1, voter2, voter3, voter4] = accounts;
 
   const name = 'OZ-Governor';
-  // const version = '1';
+  const version = '1';
   const tokenName = 'MockNFToken';
   const tokenSymbol = 'MTKN';
   const NFT0 = web3.utils.toBN(0);
@@ -30,10 +31,10 @@ contract('GovernorERC721', function (accounts) {
   for (const { mode, Token } of TOKENS) {
     describe(`using ${Token._json.contractName}`, function () {
       beforeEach(async function () {
-        //NDEV-1483 OZ: 'Governor' contract can't be deployed: 'BPF program panicked' 
         this.skip();
+        // https://neonlabs.atlassian.net/browse/NDEV-1483
         this.owner = owner;
-        this.token = await Token.new(tokenName, tokenSymbol, tokenName, '1');
+        this.token = await Token.new(tokenName, tokenSymbol, tokenName, version);
         this.mock = await Governor.new(name, this.token.address);
         this.receiver = await CallReceiver.new();
 

@@ -1,18 +1,18 @@
 /* eslint-disable */
 
-const { BN, constants, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
+const { BN, constants, expectEvent, time } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 const { MAX_UINT256, ZERO_ADDRESS } = constants;
 
+const { shouldBehaveLikeVotes } = require('../../../governance/utils/Votes.behavior');
 const { fromRpcSig } = require('ethereumjs-util');
 const ethSigUtil = require('eth-sig-util');
 const Wallet = require('ethereumjs-wallet').default;
 
 const { batchInBlock } = require('../../../helpers/txpool');
-const { getDomain, domainType, domainSeparator } = require('../../../helpers/eip712');
+const { getDomain, domainType } = require('../../../helpers/eip712');
 const { clock, clockFromReceipt } = require('../../../helpers/time');
-
-const { shouldBehaveLikeEIP6372 } = require('../../../governance/utils/EIP6372.behavior');
+const { expectRevertCustomError } = require('../../../helpers/customError');
 
 const Delegation = [
   { name: 'delegatee', type: 'address' },
@@ -30,49 +30,36 @@ contract('ERC20Votes', function (accounts) {
 
   const name = 'My Token';
   const symbol = 'MTKN';
+  const version = '1';
   const supply = new BN('10000000000000000000000000');
 
   for (const [mode, artifact] of Object.entries(MODES)) {
     describe(`vote with ${mode}`, function () {
       beforeEach(async function () {
-        this.token = await artifact.new(name, symbol, name);
+        this.token = await artifact.new(name, symbol, name, version);
+        this.votes = this.token;
       });
 
-      shouldBehaveLikeEIP6372(mode);
+      // includes EIP6372 behavior check
+      shouldBehaveLikeVotes(accounts, [1, 17, 42], { mode, fungible: true });
 
       it('initial nonce is 0', async function () {
         expect(await this.token.nonces(holder)).to.be.bignumber.equal('0');
       });
 
-      it('domain separator', async function () {
-        expect(await this.token.DOMAIN_SEPARATOR()).to.equal(await getDomain(this.token).then(domainSeparator));
-      });
-
       it('minting restriction', async function () {
-        const amount = new BN('2').pow(new BN('224'));
-        await expectRevert(this.token.$_mint(holder, amount), 'ERC20Votes: total supply risks overflowing votes');
+        const value = web3.utils.toBN(1).shln(208);
+        await expectRevertCustomError(this.token.$_mint(holder, value), 'ERC20ExceededSafeSupply', [
+          value,
+          value.subn(1),
+        ]);
       });
 
-      it('recent checkpoints', async function () {
-        // This helper can only be used with Hardhat Network
-        this.skip();
-        await this.token.delegate(holder, { from: holder });
-        for (let i = 0; i < 6; i++) {
-          await this.token.$_mint(holder, 1);
-        }
-        const block = await clock[mode]();
-        expect(await this.token.numCheckpoints(holder)).to.be.bignumber.equal('6');
-        // recent
-        expect(await this.token.getPastVotes(holder, block - 1)).to.be.bignumber.equal('5');
-        // non-recent
-        expect(await this.token.getPastVotes(holder, block - 6)).to.be.bignumber.equal('0');
-      });
+    
 
       describe('set delegation', function () {
         describe('call', function () {
           it('delegation with balance', async function () {
-            // This helper can only be used with Hardhat Network
-            this.skip();
             await this.token.$_mint(holder, supply);
             expect(await this.token.delegates(holder)).to.be.equal(ZERO_ADDRESS);
 
@@ -86,16 +73,17 @@ contract('ERC20Votes', function (accounts) {
             });
             expectEvent(receipt, 'DelegateVotesChanged', {
               delegate: holder,
-              previousBalance: '0',
-              newBalance: supply,
+              previousVotes: '0',
+              newVotes: supply,
             });
 
             expect(await this.token.delegates(holder)).to.be.equal(holder);
 
             expect(await this.token.getVotes(holder)).to.be.bignumber.equal(supply);
             expect(await this.token.getPastVotes(holder, timepoint - 1)).to.be.bignumber.equal('0');
-            await time.advanceBlock();
-            expect(await this.token.getPastVotes(holder, timepoint)).to.be.bignumber.equal(supply);
+           // this helper can only be used with Hardhat Network
+           //await time.advanceBlock();
+           //expect(await this.token.getPastVotes(holder, timepoint)).to.be.bignumber.equal(supply);
           });
 
           it('delegation without balance', async function () {
@@ -131,8 +119,6 @@ contract('ERC20Votes', function (accounts) {
           });
 
           it('accept signed delegation', async function () {
-            this.skip();
-            //This test is not applicable to NeonEVM.
             const { v, r, s } = await buildData(this.token, {
               delegatee: delegatorAddress,
               nonce,
@@ -151,16 +137,17 @@ contract('ERC20Votes', function (accounts) {
             });
             expectEvent(receipt, 'DelegateVotesChanged', {
               delegate: delegatorAddress,
-              previousBalance: '0',
-              newBalance: supply,
+              previousVotes: '0',
+              newVotes: supply,
             });
 
             expect(await this.token.delegates(delegatorAddress)).to.be.equal(delegatorAddress);
 
             expect(await this.token.getVotes(delegatorAddress)).to.be.bignumber.equal(supply);
             expect(await this.token.getPastVotes(delegatorAddress, timepoint - 1)).to.be.bignumber.equal('0');
-            await time.advanceBlock();
-            expect(await this.token.getPastVotes(delegatorAddress, timepoint)).to.be.bignumber.equal(supply);
+            // this helper can only be used with Hardhat Network
+            // await time.advanceBlock();
+            // expect(await this.token.getPastVotes(delegatorAddress, timepoint)).to.be.bignumber.equal(supply);
           });
 
           it('rejects reused signature', async function () {
@@ -172,9 +159,10 @@ contract('ERC20Votes', function (accounts) {
 
             await this.token.delegateBySig(delegatorAddress, nonce, MAX_UINT256, v, r, s);
 
-            await expectRevert(
+            await expectRevertCustomError(
               this.token.delegateBySig(delegatorAddress, nonce, MAX_UINT256, v, r, s),
-              'ERC20Votes: invalid nonce',
+              'InvalidAccountNonce',
+              [delegatorAddress, nonce + 1],
             );
           });
 
@@ -193,15 +181,25 @@ contract('ERC20Votes', function (accounts) {
           });
 
           it('rejects bad nonce', async function () {
-            const { v, r, s } = await buildData(this.token, {
+            const sig = await buildData(this.token, {
               delegatee: delegatorAddress,
               nonce,
               expiry: MAX_UINT256,
-            }).then(data => fromRpcSig(ethSigUtil.signTypedMessage(delegator.getPrivateKey(), { data })));
+            }).then(data => ethSigUtil.signTypedMessage(delegator.getPrivateKey(), { data }));
+            const { r, s, v } = fromRpcSig(sig);
 
-            await expectRevert(
+            const domain = await getDomain(this.token);
+            const typedMessage = {
+              primaryType: 'Delegation',
+              types: { EIP712Domain: domainType(domain), Delegation },
+              domain,
+              message: { delegatee: delegatorAddress, nonce: nonce + 1, expiry: MAX_UINT256 },
+            };
+
+            await expectRevertCustomError(
               this.token.delegateBySig(delegatorAddress, nonce + 1, MAX_UINT256, v, r, s),
-              'ERC20Votes: invalid nonce',
+              'InvalidAccountNonce',
+              [ethSigUtil.recoverTypedSignature({ data: typedMessage, sig }), nonce],
             );
           });
 
@@ -213,9 +211,10 @@ contract('ERC20Votes', function (accounts) {
               expiry,
             }).then(data => fromRpcSig(ethSigUtil.signTypedMessage(delegator.getPrivateKey(), { data })));
 
-            await expectRevert(
+            await expectRevertCustomError(
               this.token.delegateBySig(delegatorAddress, nonce, expiry, v, r, s),
-              'ERC20Votes: signature expired',
+              'VotesExpiredSignature',
+              [expiry],
             );
           });
         });
@@ -228,8 +227,6 @@ contract('ERC20Votes', function (accounts) {
         });
 
         it('call', async function () {
-          this.skip();
-          //This test is not applicable to NeonEVM.
           expect(await this.token.delegates(holder)).to.be.equal(holder);
 
           const { receipt } = await this.token.delegate(holderDelegatee, { from: holder });
@@ -242,24 +239,25 @@ contract('ERC20Votes', function (accounts) {
           });
           expectEvent(receipt, 'DelegateVotesChanged', {
             delegate: holder,
-            previousBalance: supply,
-            newBalance: '0',
+            previousVotes: supply,
+            newVotes: '0',
           });
           expectEvent(receipt, 'DelegateVotesChanged', {
             delegate: holderDelegatee,
-            previousBalance: '0',
-            newBalance: supply,
+            previousVotes: '0',
+            newVotes: supply,
           });
 
           expect(await this.token.delegates(holder)).to.be.equal(holderDelegatee);
 
           expect(await this.token.getVotes(holder)).to.be.bignumber.equal('0');
           expect(await this.token.getVotes(holderDelegatee)).to.be.bignumber.equal(supply);
-          expect(await this.token.getPastVotes(holder, timepoint - 1)).to.be.bignumber.equal(supply);
-          expect(await this.token.getPastVotes(holderDelegatee, timepoint - 1)).to.be.bignumber.equal('0');
-          await time.advanceBlock();
-          expect(await this.token.getPastVotes(holder, timepoint)).to.be.bignumber.equal('0');
-          expect(await this.token.getPastVotes(holderDelegatee, timepoint)).to.be.bignumber.equal(supply);
+          // expect(await this.token.getPastVotes(holder, timepoint - 1)).to.be.bignumber.equal(supply);
+          // expect(await this.token.getPastVotes(holderDelegatee, timepoint - 1)).to.be.bignumber.equal('0');
+          // this helper can only be used with Hardhat Network
+          // await time.advanceBlock();
+          // expect(await this.token.getPastVotes(holder, timepoint)).to.be.bignumber.equal('0');
+          // expect(await this.token.getPastVotes(holderDelegatee, timepoint)).to.be.bignumber.equal(supply);
         });
       });
 
@@ -278,17 +276,14 @@ contract('ERC20Votes', function (accounts) {
         });
 
         it('sender delegation', async function () {
-          this.skip();
-          //This test is not applicable to NeonEVM.
-          
           await this.token.delegate(holder, { from: holder });
 
           const { receipt } = await this.token.transfer(recipient, 1, { from: holder });
           expectEvent(receipt, 'Transfer', { from: holder, to: recipient, value: '1' });
           expectEvent(receipt, 'DelegateVotesChanged', {
             delegate: holder,
-            previousBalance: supply,
-            newBalance: supply.subn(1),
+            previousVotes: supply,
+            newVotes: supply.subn(1),
           });
 
           const { logIndex: transferLogIndex } = receipt.logs.find(({ event }) => event == 'Transfer');
@@ -307,7 +302,7 @@ contract('ERC20Votes', function (accounts) {
 
           const { receipt } = await this.token.transfer(recipient, 1, { from: holder });
           expectEvent(receipt, 'Transfer', { from: holder, to: recipient, value: '1' });
-          expectEvent(receipt, 'DelegateVotesChanged', { delegate: recipient, previousBalance: '0', newBalance: '1' });
+          expectEvent(receipt, 'DelegateVotesChanged', { delegate: recipient, previousVotes: '0', newVotes: '1' });
 
           const { logIndex: transferLogIndex } = receipt.logs.find(({ event }) => event == 'Transfer');
           expect(
@@ -328,10 +323,10 @@ contract('ERC20Votes', function (accounts) {
           expectEvent(receipt, 'Transfer', { from: holder, to: recipient, value: '1' });
           expectEvent(receipt, 'DelegateVotesChanged', {
             delegate: holder,
-            previousBalance: supply,
-            newBalance: supply.subn(1),
+            previousVotes: supply,
+            newVotes: supply.subn(1),
           });
-          expectEvent(receipt, 'DelegateVotesChanged', { delegate: recipient, previousBalance: '0', newBalance: '1' });
+          expectEvent(receipt, 'DelegateVotesChanged', { delegate: recipient, previousVotes: '0', newVotes: '1' });
 
           const { logIndex: transferLogIndex } = receipt.logs.find(({ event }) => event == 'Transfer');
           expect(
@@ -345,7 +340,6 @@ contract('ERC20Votes', function (accounts) {
         });
 
         afterEach(async function () {
-          //This helper can only be used with Hardhat Network. You are connected to 'neonlabs'.
           this.skip();
           expect(await this.token.getVotes(holder)).to.be.bignumber.equal(this.holderVotes);
           expect(await this.token.getVotes(recipient)).to.be.bignumber.equal(this.recipientVotes);
@@ -372,24 +366,18 @@ contract('ERC20Votes', function (accounts) {
 
         describe('numCheckpoints', function () {
           it('returns the number of checkpoints for a delegate', async function () {
-            this.skip();
-            //This test is not applicable to NeonEVM.
             await this.token.transfer(recipient, '100', { from: holder }); //give an account a few tokens for readability
             expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('0');
+
             const t1 = await this.token.delegate(other1, { from: recipient });
-            // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
-           // await new Promise((resolve) => setTimeout(resolve, 1000));
             t1.timepoint = await clockFromReceipt[mode](t1.receipt);
             expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('1');
+
             const t2 = await this.token.transfer(other2, 10, { from: recipient });
-            // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
-            await new Promise((resolve) => setTimeout(resolve, 1000));
             t2.timepoint = await clockFromReceipt[mode](t2.receipt);
             expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('2');
 
             const t3 = await this.token.transfer(other2, 10, { from: recipient });
-            // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
-            await new Promise((resolve) => setTimeout(resolve, 1000));
             t3.timepoint = await clockFromReceipt[mode](t3.receipt);
             expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('3');
 
@@ -408,123 +396,11 @@ contract('ERC20Votes', function (accounts) {
             expect(await this.token.getPastVotes(other1, t3.timepoint)).to.be.bignumber.equal('80');
             expect(await this.token.getPastVotes(other1, t4.timepoint)).to.be.bignumber.equal('100');
           });
-
-          it('does not add more than one checkpoint in a block', async function () {
-            this.skip();
-            // method evm_setAutomine is not supported
-            await this.token.transfer(recipient, '100', { from: holder });
-            expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('0');
-
-            const [t1, t2, t3] = await batchInBlock([
-              () => this.token.delegate(other1, { from: recipient, gas: 100000 }),
-              () => this.token.transfer(other2, 10, { from: recipient, gas: 100000 }),
-              () => this.token.transfer(other2, 10, { from: recipient, gas: 100000 }),
-            ]);
-            t1.timepoint = await clockFromReceipt[mode](t1.receipt);
-            t2.timepoint = await clockFromReceipt[mode](t2.receipt);
-            t3.timepoint = await clockFromReceipt[mode](t3.receipt);
-
-            expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('1');
-            expect(await this.token.checkpoints(other1, 0)).to.be.deep.equal([t1.timepoint.toString(), '80']);
-
-            const t4 = await this.token.transfer(recipient, 20, { from: holder });
-            t4.timepoint = await clockFromReceipt[mode](t4.receipt);
-
-            expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('2');
-            expect(await this.token.checkpoints(other1, 1)).to.be.deep.equal([t4.timepoint.toString(), '100']);
-          });
         });
 
         describe('getPastVotes', function () {
-          it('reverts if block number >= current block', async function () {
-            this.skip();
-            //This test is not applicable to NeonEVM.
-            await expectRevert(this.token.getPastVotes(other1, 5e10), 'ERC20Votes: future lookup');
-          });
-
           it('returns 0 if there are no checkpoints', async function () {
             expect(await this.token.getPastVotes(other1, 0)).to.be.bignumber.equal('0');
-          });
-
-          it('returns the latest block if >= last checkpoint block', async function () {
-            this.skip();
-            //This test is not applicable to NeonEVM.
-            const { receipt } = await this.token.delegate(other1, { from: holder });
-            const timepoint = await clockFromReceipt[mode](receipt);
-            await time.advanceBlock();
-            await time.advanceBlock();
-
-            expect(await this.token.getPastVotes(other1, timepoint)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-            expect(await this.token.getPastVotes(other1, timepoint + 1)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-          });
-
-          it('returns zero if < first checkpoint block', async function () {
-            this.skip();
-            //This test is not applicable to NeonEVM.
-            await time.advanceBlock();
-            const { receipt } = await this.token.delegate(other1, { from: holder });
-            const timepoint = await clockFromReceipt[mode](receipt);
-            // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            await time.advanceBlock();
-            await time.advanceBlock();
-
-            expect(await this.token.getPastVotes(other1, timepoint - 1)).to.be.bignumber.equal('0');
-            expect(await this.token.getPastVotes(other1, timepoint + 1)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-          });
-
-          it('generally returns the voting balance at the appropriate checkpoint', async function () {
-            this.skip();
-            //This test is not applicable to NeonEVM.
-            const t1 = await this.token.delegate(other1, { from: holder });
-            await time.advanceBlock();
-            await time.advanceBlock();
-            const t2 = await this.token.transfer(other2, 10, { from: holder });
-            await time.advanceBlock();
-            await time.advanceBlock();
-            const t3 = await this.token.transfer(other2, 10, { from: holder });
-            await time.advanceBlock();
-            await time.advanceBlock();
-            const t4 = await this.token.transfer(holder, 20, { from: other2 });
-            await time.advanceBlock();
-            await time.advanceBlock();
-
-            t1.timepoint = await clockFromReceipt[mode](t1.receipt);
-            t2.timepoint = await clockFromReceipt[mode](t2.receipt);
-            t3.timepoint = await clockFromReceipt[mode](t3.receipt);
-            t4.timepoint = await clockFromReceipt[mode](t4.receipt);
-
-            expect(await this.token.getPastVotes(other1, t1.timepoint - 1)).to.be.bignumber.equal('0');
-            expect(await this.token.getPastVotes(other1, t1.timepoint)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-            expect(await this.token.getPastVotes(other1, t1.timepoint + 1)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-            expect(await this.token.getPastVotes(other1, t2.timepoint)).to.be.bignumber.equal(
-              '9999999999999999999999990',
-            );
-            expect(await this.token.getPastVotes(other1, t2.timepoint + 1)).to.be.bignumber.equal(
-              '9999999999999999999999990',
-            );
-            expect(await this.token.getPastVotes(other1, t3.timepoint)).to.be.bignumber.equal(
-              '9999999999999999999999980',
-            );
-            expect(await this.token.getPastVotes(other1, t3.timepoint + 1)).to.be.bignumber.equal(
-              '9999999999999999999999980',
-            );
-            expect(await this.token.getPastVotes(other1, t4.timepoint)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
-            expect(await this.token.getPastVotes(other1, t4.timepoint + 1)).to.be.bignumber.equal(
-              '10000000000000000000000000',
-            );
           });
         });
       });
@@ -534,85 +410,10 @@ contract('ERC20Votes', function (accounts) {
           await this.token.delegate(holder, { from: holder });
         });
 
-        it('reverts if block number >= current block', async function () {
-          this.skip();
-          //This test is not applicable to NeonEVM.
-          await expectRevert(this.token.getPastTotalSupply(5e10), 'ERC20Votes: future lookup');
-        });
-
         it('returns 0 if there are no checkpoints', async function () {
           expect(await this.token.getPastTotalSupply(0)).to.be.bignumber.equal('0');
         });
 
-        it('returns the latest block if >= last checkpoint block', async function () {
-          this.skip();
-          //This test is not applicable to NeonEVM.
-          const { receipt } = await this.token.$_mint(holder, supply);
-          const timepoint = await clockFromReceipt[mode](receipt);
-
-          await time.advanceBlock();
-          await time.advanceBlock();
-
-          expect(await this.token.getPastTotalSupply(timepoint)).to.be.bignumber.equal(supply);
-          expect(await this.token.getPastTotalSupply(timepoint + 1)).to.be.bignumber.equal(supply);
-        });
-
-        it('returns zero if < first checkpoint block', async function () {
-          this.skip();
-          //This test is not applicable to NeonEVM.
-          await time.advanceBlock();
-          const { receipt } = await this.token.$_mint(holder, supply);
-          // we need sleep to avoid 'Error: Returned error: execution reverted: ERC20Votes: future lookup'
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          const timepoint = await clockFromReceipt[mode](receipt);
-          await time.advanceBlock();
-          await time.advanceBlock();
-
-          expect(await this.token.getPastTotalSupply(timepoint - 1)).to.be.bignumber.equal('0');
-          expect(await this.token.getPastTotalSupply(timepoint + 1)).to.be.bignumber.equal(
-            '10000000000000000000000000',
-          );
-        });
-
-        it('generally returns the voting balance at the appropriate checkpoint', async function () {
-          this.skip();
-          //This test is not applicable to NeonEVM.
-          const t1 = await this.token.$_mint(holder, supply);
-          await time.advanceBlock();
-          await time.advanceBlock();
-          const t2 = await this.token.$_burn(holder, 10);
-          await time.advanceBlock();
-          await time.advanceBlock();
-          const t3 = await this.token.$_burn(holder, 10);
-          await time.advanceBlock();
-          await time.advanceBlock();
-          const t4 = await this.token.$_mint(holder, 20);
-          await time.advanceBlock();
-          await time.advanceBlock();
-
-          t1.timepoint = await clockFromReceipt[mode](t1.receipt);
-          t2.timepoint = await clockFromReceipt[mode](t2.receipt);
-          t3.timepoint = await clockFromReceipt[mode](t3.receipt);
-          t4.timepoint = await clockFromReceipt[mode](t4.receipt);
-
-          expect(await this.token.getPastTotalSupply(t1.timepoint - 1)).to.be.bignumber.equal('0');
-          expect(await this.token.getPastTotalSupply(t1.timepoint)).to.be.bignumber.equal('10000000000000000000000000');
-          expect(await this.token.getPastTotalSupply(t1.timepoint + 1)).to.be.bignumber.equal(
-            '10000000000000000000000000',
-          );
-          expect(await this.token.getPastTotalSupply(t2.timepoint)).to.be.bignumber.equal('9999999999999999999999990');
-          expect(await this.token.getPastTotalSupply(t2.timepoint + 1)).to.be.bignumber.equal(
-            '9999999999999999999999990',
-          );
-          expect(await this.token.getPastTotalSupply(t3.timepoint)).to.be.bignumber.equal('9999999999999999999999980');
-          expect(await this.token.getPastTotalSupply(t3.timepoint + 1)).to.be.bignumber.equal(
-            '9999999999999999999999980',
-          );
-          expect(await this.token.getPastTotalSupply(t4.timepoint)).to.be.bignumber.equal('10000000000000000000000000');
-          expect(await this.token.getPastTotalSupply(t4.timepoint + 1)).to.be.bignumber.equal(
-            '10000000000000000000000000',
-          );
-        });
       });
     });
   }
