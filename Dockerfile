@@ -11,3 +11,5 @@ RUN npm set audit false && \
     npm ci 
 
 COPY . ./
+
+RUN ./docker/compile_contracts.sh
