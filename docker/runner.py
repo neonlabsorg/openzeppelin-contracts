@@ -57,7 +57,7 @@ def run(jobs: int):
         print(stderr)
         keys_env.append(keys)
         log_dirs = (
-            cwd.parent / "results" / file_name.replace(".", "_").replace("/", "_")
+            cwd / "results" / file_name.replace(".", "_").replace("/", "_")
         )
         log_dirs.mkdir(parents=True, exist_ok=True)
         with open(log_dirs / "stdout.log", "w") as f:
