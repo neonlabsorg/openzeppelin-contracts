@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 from multiprocessing.dummy import Pool
 
@@ -28,6 +29,7 @@ def run(jobs: int):
 
     cwd = pathlib.Path().parent.absolute()
     (cwd / "results").mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(cwd / "package.json", cwd / "results" / "openzeppelin-package.json")
 
     nested_accounts = os.environ["NESTED_ACCOUNTS"]
     print("%r" % nested_accounts)
