@@ -1,0 +1,34 @@
+name: "OpenZeppelin tests"
+description: "Run OpenZeppelin Contracts tests in Neon CI"
+inputs:
+    tag:
+        description: "tag name for oz tests image"
+        required: true
+        default: latest
+    jobs_number:
+      description: "Number of parallel jobs for tests execution"
+      required: true
+      default: "8"
+    network_id:
+        description: "Network id"
+        required: true
+    proxy_url:
+        description: "Proxy url"
+        required: true
+    nested_accounts:
+        description: "An array of prepared accounts in json format"
+        required: true
+runs:
+  using: composite
+  steps:
+    - name: "Run OpenZeppelin tests"
+      shell: bash
+      env:
+        image: neonlabsorg/openzeppelin-contracts
+      run: |
+        docker run -i -v ${{ $GITHUB_WORKSPACE }}/oz-results:"/usr/src/app/results" \
+        -e ${{ network_id }} \
+        -e ${{ proxy_url }} \
+        -e ${{ nested_accounts }} \
+        ${{ image }}:{tag} \
+        python3 ./docker/runner.py --jobs ${{ jobs }}
