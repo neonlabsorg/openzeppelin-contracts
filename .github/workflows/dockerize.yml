@@ -16,7 +16,7 @@ jobs:
           if [[ "${{ github.ref_name }}" == 'master'  ]]; then
             tag='latest'
           else
-            tag='${{ github.sha }}'
+            tag='${{ github.head_ref || github.ref_name }}'
           fi
           echo "tag=${tag}"
           echo "tag=${tag}" >> $GITHUB_OUTPUT
