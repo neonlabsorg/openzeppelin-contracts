@@ -4,6 +4,7 @@ const { fixSignature } = require('../helpers/sign');
 const { setGSNProvider } = require('../helpers/set-gsn-provider');
 const { utils: { toBN } } = require('web3');
 const { ZERO_ADDRESS } = constants;
+const { ether } = require('@openzeppelin/test-helpers');
 
 const GSNRecipientSignatureMock = artifacts.require('GSNRecipientSignatureMock');
 
@@ -38,7 +39,7 @@ contract('GSNRecipientSignature', function (accounts) {
 
   context('when relay-called', function () {
     beforeEach(async function () {
-      await gsn.fundRecipient(web3, { recipient: this.recipient.address });
+      await gsn.fundRecipient(web3, { recipient: this.recipient.address , amount: ether('2') });
     });
 
     it('rejects unsigned relay requests', async function () {

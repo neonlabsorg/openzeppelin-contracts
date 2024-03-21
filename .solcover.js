@@ -6,7 +6,7 @@ module.exports = {
         'mocks',
     ],
     providerOptions: {
-        default_balance_ether: '10000000000000000000000000',
+        default_balance_ether: '30000000000000000000000000',
     },
     mocha: {
         fgrep: '[skip-on-coverage]',

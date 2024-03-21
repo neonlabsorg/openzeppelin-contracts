@@ -4,6 +4,7 @@ const gsn = require('@openzeppelin/gsn-helpers');
 const { fixSignature } = require('../helpers/sign');
 const { setGSNProvider } = require('../helpers/set-gsn-provider');
 const { utils: { toBN } } = require('web3');
+const { ether } = require('@openzeppelin/test-helpers');
 
 const ERC721GSNRecipientMock = artifacts.require('ERC721GSNRecipientMock');
 
@@ -23,6 +24,7 @@ contract('ERC721GSNRecipient (integration)', function (accounts) {
   });
 
   async function testMintToken (token, from, tokenId, options = {}) {
+
     const { tx } = await token.mint(tokenId, { from, ...options });
     await expectEvent.inTransaction(tx, ERC721GSNRecipientMock, 'Transfer', { from: ZERO_ADDRESS, to: from, tokenId });
   }
@@ -35,11 +37,12 @@ contract('ERC721GSNRecipient (integration)', function (accounts) {
 
   context('when relay-called', function () {
     beforeEach(async function () {
-      await gsn.fundRecipient(web3, { recipient: this.token.address });
+      await gsn.fundRecipient(web3, { recipient: this.token.address, amount: ether('2') });
     });
 
     it('sender can mint tokens', async function () {
       const approveFunction = async (data) =>
+
         fixSignature(
           await web3.eth.sign(
             web3.utils.soliditySha3(

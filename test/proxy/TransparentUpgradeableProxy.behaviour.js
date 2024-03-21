@@ -320,7 +320,7 @@ module.exports = function shouldBehaveLikeTransparentUpgradeableProxy (createPro
     it('should store the admin proxy in specified location', async function () {
       const slot = '0x' + new BN(ethereumjsUtil.keccak256(Buffer.from(ADMIN_LABEL))).subn(1).toString(16);
       const proxyAdmin = toChecksumAddress(await web3.eth.getStorageAt(this.proxyAddress, slot));
-      expect(proxyAdmin).to.be.equal(proxyAdminAddress);
+      expect(proxyAdmin.toLowerCase()).to.be.equal(proxyAdminAddress.toLowerCase());
     });
   });
 

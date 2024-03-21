@@ -74,7 +74,7 @@ contract('GSNRecipient', function (accounts) {
 
   context('when receiving a relayed call', function () {
     beforeEach(async function () {
-      await gsn.fundRecipient(web3, { recipient: this.recipient.address });
+      await gsn.fundRecipient(web3, { recipient: this.recipient.address, amount: ether('2') });
     });
 
     describe('msgSender', function () {
