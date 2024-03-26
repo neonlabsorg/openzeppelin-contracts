@@ -14,7 +14,7 @@ jobs:
         id: define-env
         run: |
           if [[ "${{ github.ref_name }}" == 'master'  ]]; then
-            tag='master'
+            tag='latest'
           else
             tag='${{ github.head_ref || github.ref_name }}'
           fi

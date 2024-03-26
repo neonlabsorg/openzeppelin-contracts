@@ -133,13 +133,13 @@ module.exports = {
   },
   mocha: {
     timeout: 600000,
-    // reporter: 'mocha-multi-reporters',
-    // reporterOption: {
-    //   reporterEnabled: 'spec, allure-mocha',
-    //   allureMochaReporterOptions: {
-    //     resultsDir: '../../allure-results',
-    //   },
-    // },
+    reporter: 'mocha-multi-reporters',
+    reporterOption: {
+      reporterEnabled: 'spec, allure-mocha',
+      allureMochaReporterOptions: {
+        resultsDir: '../../allure-results',
+      },
+    },
   },
   docgen: require('./docs/config'),
 };
