@@ -3,6 +3,8 @@
 path=$HOME/.cache/hardhat-nodejs/compilers-v2/linux-amd64/
 attempts=1
 
+npx hardhat clean
+
 while [ $attempts -le 10 ]; do
   echo "Attempt $attempts"
 
