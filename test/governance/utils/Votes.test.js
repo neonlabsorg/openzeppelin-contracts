@@ -38,6 +38,8 @@ contract('Votes', function (accounts) {
 
       describe('performs voting operations', function () {
         beforeEach(async function () {
+          this.skip();
+          //timestamps are not supported
           this.txs = [];
           for (const [account, amount] of Object.entries(amounts)) {
             this.txs.push(await this.votes.$_mint(account, amount));
