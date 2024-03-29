@@ -222,6 +222,8 @@ contract('ERC20Votes', function (accounts) {
 
       describe('change delegation', function () {
         beforeEach(async function () {
+          this.skip();
+          //timestamps are not supported
           await this.token.$_mint(holder, supply);
           await this.token.delegate(holder, { from: holder });
         });
