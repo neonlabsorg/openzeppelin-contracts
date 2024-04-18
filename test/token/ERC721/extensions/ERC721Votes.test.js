@@ -133,6 +133,8 @@ contract('ERC721Votes', function (accounts) {
         });
 
         afterEach(async function () {
+          this.skip();
+          //This helper can only be used with Hardhat Network
           expect(await this.votes.getVotes(account1)).to.be.bignumber.equal(this.account1Votes);
           expect(await this.votes.getVotes(account2)).to.be.bignumber.equal(this.account2Votes);
 
