@@ -83,6 +83,8 @@ function shouldBehaveLikeVotes(accounts, tokens, { mode = 'blocknumber', fungibl
       });
 
       it('delegation update', async function () {
+        this.skip();
+        //This helper can only be used with Hardhat Network
         await this.votes.delegate(accounts[1], { from: accounts[1] });
         await this.votes.$_mint(accounts[1], token);
         const weight = getWeight(token);
