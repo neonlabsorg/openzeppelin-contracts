@@ -366,6 +366,8 @@ contract('ERC20Votes', function (accounts) {
 
         describe('numCheckpoints', function () {
           it('returns the number of checkpoints for a delegate', async function () {
+            this.skip();
+            //this helper can only be used with Hardhat Network
             await this.token.transfer(recipient, '100', { from: holder }); //give an account a few tokens for readability
             expect(await this.token.numCheckpoints(other1)).to.be.bignumber.equal('0');
 
