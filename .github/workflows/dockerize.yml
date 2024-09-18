@@ -4,7 +4,7 @@ on:
   push:
   workflow_dispatch:
 env:
-  IMAGE_NAME: neonlabsorg/openzeppelin-contracts
+  IMAGE_NAME: ${{ vars.DOCKER_HUB_ORG_NAME }}/openzeppelin-contracts
 jobs:
   dockerize:
     runs-on: ubuntu-20.04
