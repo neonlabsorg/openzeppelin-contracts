@@ -7,7 +7,7 @@ env:
   IMAGE_NAME: ${{ vars.DOCKERHUB_ORG_NAME }}/openzeppelin-contracts
 jobs:
   dockerize:
-    runs-on: ubuntu-20.04
+    runs-on: ["self-hosted", "k8s-prod"]
     steps:
       - uses: actions/checkout@v3
       - name: Define tag
