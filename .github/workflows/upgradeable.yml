@@ -8,7 +8,7 @@ on:
 
 jobs:
   trigger:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
     steps:
       - id: app
         uses: getsentry/action-github-app-token@v1
