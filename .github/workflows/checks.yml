@@ -18,7 +18,7 @@ env:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up environment
@@ -26,7 +26,7 @@ jobs:
       - run: npm run lint
 
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
     env:
       FORCE_COLOR: 1
       GAS: true
@@ -47,7 +47,7 @@ jobs:
           token: ${{ github.token }}
 
   tests-upgradeable:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
     env:
       FORCE_COLOR: 1
     steps:
@@ -74,7 +74,7 @@ jobs:
           token: ${{ github.token }}
 
   tests-foundry:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -85,7 +85,7 @@ jobs:
         run: forge test -vv
 
   coverage:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up environment
@@ -96,7 +96,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   slither:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up environment
@@ -107,7 +107,7 @@ jobs:
           node-version: 18.15
 
   codespell:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
     steps:
       - uses: actions/checkout@v4
       - name: Run CodeSpell

@@ -18,14 +18,14 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   apply-diff:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
     steps:
       - uses: actions/checkout@v4
       - name: Apply patches
         run: make -C certora apply
 
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted", "k8s-prod"]
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'formal-verification')
     steps:
       - uses: actions/checkout@v4
