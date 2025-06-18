@@ -15,7 +15,6 @@ jobs:
         with:
           repository: OpenZeppelin/openzeppelin-contracts-upgradeable
           fetch-depth: 0
-          token: ${{ secrets.GH_TOKEN_UPGRADEABLE }}
       - name: Fetch current non-upgradeable branch
         run: |
           git fetch "$REMOTE" master # Fetch default branch first for patch to apply cleanly
