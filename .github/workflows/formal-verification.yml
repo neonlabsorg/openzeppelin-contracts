@@ -18,14 +18,14 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   apply-diff:
-    runs-on: ["self-hosted", "k8s-prod"]
+    runs-on: ["gha-runner-scale-set"]
     steps:
       - uses: actions/checkout@v4
       - name: Apply patches
         run: make -C certora apply
 
   verify:
-    runs-on: ["self-hosted", "k8s-prod"]
+    runs-on: ["gha-runner-scale-set"]
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'formal-verification')
     steps:
       - uses: actions/checkout@v4
