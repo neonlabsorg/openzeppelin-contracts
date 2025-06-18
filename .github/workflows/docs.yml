@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ["self-hosted", "k8s-prod"]
+    runs-on: ["gha-runner-scale-set"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up environment
