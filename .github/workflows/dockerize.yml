@@ -7,7 +7,7 @@ env:
   IMAGE_NAME: ${{ vars.DOCKERHUB_ORG_NAME }}/openzeppelin-contracts
 jobs:
   dockerize:
-    runs-on: ["self-hosted", "k8s-prod"]
+    runs-on: ["gha-runner-scale-set"]
     steps:
       - uses: actions/checkout@v3
       - name: Define tag
