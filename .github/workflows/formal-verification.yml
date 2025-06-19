@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - shell: bash
-        run: apt update && apt install -y build-essential
+        run: sudo apt update && sudo apt install -y build-essential
       - name: Apply patches
         run: make -C certora apply
 
