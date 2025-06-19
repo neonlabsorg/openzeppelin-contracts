@@ -21,6 +21,8 @@ jobs:
     runs-on: ["gha-runner-scale-set"]
     steps:
       - uses: actions/checkout@v4
+      - shell: bash
+        run: sudo apt update && sudo apt install -y build-essential
       - name: Apply patches
         run: make -C certora apply
 
