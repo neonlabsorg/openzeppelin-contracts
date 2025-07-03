@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ["gha-runner-scale-set"]
     steps:
       - uses: actions/checkout@v3
 
@@ -60,7 +60,7 @@ jobs:
         run: forge build --skip test --contracts test/compilation/CompilationScriptBase.sol --use solc:0.8.17 --via-ir
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ["gha-runner-scale-set"]
     steps:
       - uses: actions/checkout@v3
 
@@ -76,7 +76,7 @@ jobs:
         run: forge test -vvv
 
   fmt:
-    runs-on: ubuntu-latest
+    runs-on: ["gha-runner-scale-set"]
     steps:
       - uses: actions/checkout@v3
 
